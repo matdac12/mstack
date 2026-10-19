@@ -1,0 +1,34 @@
+{
+  "tools": [
+    {
+      "name": "parla",
+      "repo": "https://github.com/matdac12/parla",
+      "summary": "Hold Ctrl+Alt, talk, and the transcript is pasted into the focused app.",
+      "stack": "Tauri (Rust + TypeScript)"
+    },
+    {
+      "name": "traccia",
+      "repo": "https://github.com/matdac12/traccia",
+      "summary": "A self-hosted issue tracker for you and your agents, reached over MCP.",
+      "stack": "TypeScript (pnpm monorepo)"
+    },
+    {
+      "name": "tasca",
+      "repo": "https://github.com/matdac12/tasca",
+      "summary": "A file shelf that slides out of the screen edge: park files, drag them out later.",
+      "stack": "Rust (Win32)"
+    },
+    {
+      "name": "annota",
+      "repo": "https://github.com/matdac12/annota",
+      "summary": "Annotated screenshots, copied as one PNG to paste into agent chats.",
+      "stack": "Tauri (Rust + TypeScript)"
+    },
+    {
+      "name": "hyperkey",
+      "repo": "https://github.com/matdac12/hyperkey",
+      "summary": "Caps Lock as a hyper key: open apps, switch desktops, launch the rest of the stack.",
+      "stack": "Python + AutoHotkey v2"
+    }
+  ]
+}

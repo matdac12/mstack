@@ -1,0 +1,16 @@
+# Each tool is its own repo, cloned into place by setup.ps1. Never commit them here.
+/parla/
+/traccia/
+/tasca/
+/annota/
+/hyperkey/
+
+# Local-only notes.
+/notes/
+
+# OS and editor noise.
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
