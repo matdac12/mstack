@@ -29,6 +29,12 @@
       "repo": "https://github.com/matdac12/hyperkey",
       "summary": "Caps Lock as a hyper key: open apps, switch desktops, launch the rest of the stack.",
       "stack": "Python + AutoHotkey v2"
+    },
+    {
+      "name": "musica",
+      "repo": "https://github.com/matdac12/musica",
+      "summary": "Background music from YouTube in the tray: Caps+M, search, play. No browser tab.",
+      "stack": "Rust (Win32) + mpv"
     }
   ]
 }

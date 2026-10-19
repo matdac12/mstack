@@ -8,7 +8,7 @@
 
 <br>
 
-Small, sharp tools I build and use every day to work alongside coding agents: talk instead of type, track work with your agents, point at the screen, park files, reach everything from one key.
+Small, sharp tools I build and use every day to work alongside coding agents: talk instead of type, track work with your agents, point at the screen, park files, keep music on, reach everything from one key.
 
 Each tool is its own repo with its own history and releases. mstack is where they meet, plus the agent skills that drive them.
 
@@ -21,8 +21,9 @@ Each tool is its own repo with its own history and releases. mstack is where the
 | [**annota**](https://github.com/matdac12/annota) | Annotated screenshots for agent chats. Drag a region, box what matters, add a note, paste one PNG. | Tauri · Rust · TypeScript |
 | [**tasca**](https://github.com/matdac12/tasca) | A file shelf that slides out of the screen edge. Park files mid-drag, drag them out later. | Rust · Win32 |
 | [**hyperkey**](https://github.com/matdac12/hyperkey) | Caps Lock as a hyper key: open or focus apps, switch virtual desktops. | Python · AutoHotkey v2 |
+| [**musica**](https://github.com/matdac12/musica) | Background music from YouTube, from the tray. Search, play, keep working. No browser tab, no ads. *Prototype.* | Rust · Win32 · mpv |
 
-They are separate apps that compose. Hyperkey is the glue: <kbd>Caps</kbd>+<kbd>S</kbd> opens annota, <kbd>Caps</kbd>+<kbd>D</kbd> opens tasca, and you dictate into annota's notes with parla like into any text box.
+They are separate apps that compose. Hyperkey is the glue: <kbd>Caps</kbd>+<kbd>S</kbd> opens annota, <kbd>Caps</kbd>+<kbd>D</kbd> opens tasca, <kbd>Caps</kbd>+<kbd>M</kbd> opens musica, and you dictate into annota's notes with parla like into any text box.
 
 ## Skills
 
@@ -50,7 +51,7 @@ mstack/
 ├── skills/        agent skills, tracked here
 ├── tools.json     the tool manifest setup.ps1 reads
 ├── setup.ps1
-└── parla/ traccia/ annota/ tasca/ hyperkey/   ← cloned by setup.ps1, each its own repo
+└── parla/ traccia/ annota/ tasca/ hyperkey/ musica/   ← cloned by setup.ps1, each its own repo
 ```
 
 ## License
