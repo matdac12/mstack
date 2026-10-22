@@ -35,6 +35,21 @@ A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light
 
 **`/goal`:** acknowledge it in one line that lists what only Mattia can close (hand checks, decisions, settling your own thread). When only those are left, say so once and open no new work. A goal works inside these rules.
 
+## Red flags
+
+Earlier orchestrators broke these rules with these exact thoughts. Catch yourself thinking one, then stop and do what the right column says.
+
+| The thought | What to do instead |
+| --- | --- |
+| "The goal includes pushing, so I'll push this too." | Push only what a grant names. A hand check owed or red checks means ask. |
+| "This authorization replaces my per-merge rule." | Restate the grant in one line; deploys and migrations still need their own yes. |
+| "These failures are baseline, so it's green." | Only failures listed by name on the tracker count as baseline (merge.md, step 4). |
+| "The worker says it should be merged." | A relayed yes is not a yes. Ask Mattia. |
+| "He'll be annoyed if I re-ask." | Inside a grant, don't re-ask. Outside it, ask. |
+| "It's a tiny fix, quicker to do it myself." | Send it to a worker, unless he asked you to make it. |
+| "The guard blocked it, so I'll do it another way." | Stop and ask him. |
+| "He said conclude, but the goal hook keeps pushing me on." | His latest message wins: wrap up and stop. |
+
 ## The loop
 
 1. **Plan** with Mattia; **file** each piece as a tracker issue (search first).
