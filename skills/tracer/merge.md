@@ -6,21 +6,23 @@ Read the real diff (`git diff <defaultBranch>...<branch>`, `git log`), not the r
 
 ## Merge
 
-A yes naming the branches ("merge all three") counts once you have reviewed them and nothing alarms you; dirty main, red checks or out-of-boundary conflicts mean stop and ask. A yes to merge is never a yes to push. One branch at a time, in his order unless dependencies force another, else the larger first. Wait (`t3_thread_wait`) until the worker's thread is idle before touching its branch; never interrupt it.
+A yes naming the branches ("merge all three"), or a grant covering them (SKILL.md), counts once you have reviewed them and nothing alarms you; dirty main, red checks or out-of-boundary conflicts mean stop and ask. A yes to merge is never a yes to push. One branch at a time, in his order unless dependencies force another, else the larger first. Wait (`t3_thread_wait`) until the worker's thread is idle before touching its branch; never interrupt it.
 
-1. **Preconditions, every time:** main checkout on `<defaultBranch>`, no merge or rebase in progress, `git status --porcelain --untracked-files=no` empty (untracked handoff docs are fine). Otherwise ask whether to commit or stash; once he says which, do it and tell him (restoring a stash is his call).
-2. Note `git rev-parse <defaultBranch>`, then `git merge --no-ff <branch>`.
-3. **Conflicts:** `git merge --abort` first (never leave main half-merged). Then **you** resolve them in the worker's idle, clean worktree: merge `<defaultBranch>` into the branch, resolve only the conflicting hunks keeping both sides' intent, rerun the project's checks, commit, retry. Unclear intent, or files outside the task's boundaries: stop and ask.
+1. **Preconditions, every time:** main checkout on `<defaultBranch>`, no merge or rebase in progress, and a clean tracked tree: `test -z "$(git status --porcelain --untracked-files=no)"` must succeed (untracked handoff docs are fine). Otherwise stop and ask whether to commit or stash; once he says which, do it and tell him (restoring a stash is his call).
+2. Note `git rev-parse <defaultBranch>`, then `git merge --no-ff <branch>`. Write commit and merge messages with `-F` from a heredoc, so backticks are not run as commands.
+3. **Conflicts:** `git merge --abort` first (never leave main half-merged). Then **you** resolve them in the worker's idle, clean worktree: merge `<defaultBranch>` into the branch, resolve only the conflicting hunks keeping both sides' intent, check no conflict markers remain, rerun the project's checks, commit, retry. Unclear intent, or files outside the task's boundaries: stop and ask.
 4. **Verify** the merged result with the project's own declared commands (package.json scripts via its lockfile's manager, pytest, Makefile `test`), typecheck and lint before tests. Never invent a command; no harness means say it is unverified and ask before Done. Record command and exit code.
-5. **Green:** set the issue Done, then tell the others to rebase (below). **Red:** undo only this merge with `git revert -m 1 HEAD` (never `reset --hard` or other workarounds), set the issue back to In Review or blocked with a comment, tell Mattia. Never leave `<defaultBranch>` red for others to branch from. To merge a reverted branch again, first revert the revert. Still red after the revert: stop, tell him, and find the culprit among recent merges before merging more.
+   - **Known-red baseline:** a check already red on a clean `<defaultBranch>` has its failing tests listed by name on a tracker issue. The merge passes only if it fails exactly those, no new ones. No home-made lenient gate scripts; the real fix is an issue in the repo.
+   - **Project-declared gate:** if the project's AGENTS.md or private notes declare a gate you cannot run locally (remote CI over SSH), follow it. When it needs a pushed ref, push only a temporary `ci/<short-sha>` branch (on his yes or grant: it is a network write), merge only when the `<defaultBranch>` tree equals the tested tree, delete the `ci/` branch afterwards, and never push `<defaultBranch>` just to test it.
+5. **Green:** set the issue Done, or In Review with "hand check owed" (SKILL.md, Tracker discipline), then tell the others to rebase (below). **Red** (local or the declared gate): undo only this merge with `git revert -m 1 HEAD` (never `reset --hard`, and never a fix merged on top), set the issue back to In Review or blocked with a comment, tell Mattia. Never leave `<defaultBranch>` red for others to branch from. To merge a reverted branch again, first revert the revert. Still red after the revert: stop, tell him, and find the culprit among recent merges before merging more.
 6. Only then the next branch.
 
 ## Integration rehearsal
 
 Two finished branches touch the same files? Do not hand-test them one by one.
-1. Scratch worktree `int-<ids>` from `<defaultBranch>` (`git worktree add <path> -b int-<ids> <defaultBranch>`), rerere on. Merge both with `--no-ff`; resolve conflicts there as in Merge step 3.
-2. rerere replays conflict hunks, not semantic additions outside them (a new field a shared type also needs). Re-check the merged result compiles and passes the full checks, then build the release artifact.
-3. Mattia does **one** combined hand check on that build. On his yes, merge `int-<ids>` into `<defaultBranch>` with a proper message naming the issues, verify as in step 4, then clean up the worktree and branches.
+1. Detached scratch worktree, so no scratch branch needs deleting later: `git worktree add --detach ~/.t3/worktrees/<repo>/int-<ids> <defaultBranch>`, rerere on. Merge both with `--no-ff`; resolve conflicts there as in Merge step 3.
+2. rerere replays conflict hunks, not semantic additions outside them (a new field a shared type also needs). Re-check the merged result compiles and passes the full checks, then build the release artifact. Prototype builds only when Mattia asks.
+3. Mattia does **one** combined hand check on that build. On his yes, merge its HEAD commit into `<defaultBranch>` (`git merge --no-ff <sha>`) with a message naming the issues, verify as in step 4, then clean up the worktree.
 
 ## Rebase notice (after each merge verified green)
 
@@ -28,16 +30,28 @@ For every active worker with an unmerged branch (running or idle), `t3_thread_se
 
 ## Push
 
-Merge and verify everything locally, then **ask**, separately: a yes to merge is never a yes to push. `git fetch origin`, show `git log origin/<defaultBranch>..<defaultBranch>`, push once with `git push origin <defaultBranch>` (never `--force`). Recommend CI when native or platform code changed (Rust, ...): it may be the only Linux check. Rejected or origin moved: merge or rebase locally, re-verify, show the revised set, ask again. Timeout: fetch and inspect before retrying. Nothing else goes to the network (no feature branches, no PRs) unless he asks for a PR.
+Merge and verify everything locally, then push on his yes or under a grant that names push; a yes to merge is never a yes to push. `git fetch origin`, show `git log origin/<defaultBranch>..<defaultBranch>`, push once with `git push origin <defaultBranch>` (never `--force`). Recommend CI when native or platform code changed (Rust, ...): it may be the only Linux check. Rejected or origin moved: merge or rebase locally, re-verify, show the revised set, ask again. Timeout: fetch and inspect before retrying. Nothing else goes to the network (no feature branches, no PRs) except a declared gate's `ci/` branch (Merge step 4), unless he asks for a PR.
 
 "Push without CI" means `[skip ci]` in the **head** commit message. Prefer an empty commit (`git commit --allow-empty -m "<IDS>: push ... [skip ci]"`) to amending a merge commit: amending changes SHAs that sub-tracers or workers may already have been told about.
 
-## Clean up and settle
+## Settle and clean up
 
-After the whole task is merged and verified, in the same step as the tracker update:
-- **Worktree:** `git worktree remove <path>` (no `--force`), then `git branch -d <branch>`. Remove a merged remote branch only with Mattia's OK, and never a branch that did not merge (old experiments) without asking. Uncommitted changes: leave it and tell Mattia. Directory in use (a parked thread; normal on Windows): settle the threads, retry once, then look for leftover dev servers (workers.md, Windows), else tell him the folder is a leftover to delete after the thread is closed. A guard hook that blocks `git branch -D` stays blocked even after his OK: give him the exact PowerShell to run.
-- **Settle threads** so they leave his sidebar: `t3_thread_organize {"action":"settle","threadId":"<id>"}` (reversible with `unsettle`; archive only if he asks), and tell him which. `t3_thread_list` with `settled:false` also returns idle **subagent** threads (review subagents a worker spawned): after a merge settle the finished workers and their subagents together, in parallel batches. Implement, fix and execute threads: when the task is merged, verified and Done. Design and guide threads: once the execution thread is launched from their plan (or the design is dropped). Review and investigate threads: once the report is recorded and acted on. **Never** settle a thread that is running, has a pending request, has an unrecorded report, or has an unmerged branch; so never a running sub-tracer or its active workers.
+Automatic, without being asked, for threads you launched only (never another orchestrator's).
+
+**Settle** a thread the moment it is no longer needed: `t3_thread_organize {"action":"settle","threadId":"<id>"}` (reversible with `unsettle`; archive only if he asks).
+- Implement, fix and execute threads: once their merge is verified.
+- Review and investigate threads: once the report is recorded.
+- Design and guide threads: once the execution thread is launched from their plan, or the design is dropped.
+- Cancelled or abandoned threads: right away.
+
+Settle the thread's subagents with it: find them with one `t3_thread_list {"settled":false,"includeSubagents":true}` and settle them in parallel batches. A settle fails while the thread's turn is still running: `t3_thread_wait` it first. **Never** settle a thread that is running, has a pending request, has an unrecorded report, or has an unmerged branch; so never a running sub-tracer or its active workers. Tell Mattia in one line what you settled.
+
+**Clean up** each finished task's worktree, in this order (a parked thread or a dev server holds the folder on Windows):
+1. Settle its threads, and stop any dev server running from that worktree (find it with `Get-CimInstance Win32_Process` filtered on the path in `ExecutablePath` or `CommandLine`; never stop `claude.exe`).
+2. `git -C <path> status --ignored`: copy out anything gitignored the report names (backups, artifacts). Uncommitted changes: leave the worktree and tell Mattia.
+3. `git -c core.longpaths=true worktree remove <path>` (no `--force`), then `rmdir` an empty leftover, then `git branch -d <branch>`. Remove a merged remote branch only with Mattia's OK, and never a branch that did not merge without asking.
+4. A removal that still fails: note the folder and move on, without retrying. At the end of the session give Mattia one PowerShell command that deletes all noted leftovers. A guard hook that blocks `git branch -D` stays blocked even after his OK: give him the exact command.
 
 ## Deploy
 
-Only when asked, with the project's documented procedure, from the clean main checkout; long steps in the background. Verify health and report the version.
+Only when Mattia asks for it explicitly (a grant never covers it), with the project's documented procedure, from the clean main checkout; long steps in the background. Verify health and report the version.

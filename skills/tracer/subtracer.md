@@ -9,7 +9,7 @@ A **sub-tracer** is a worker thread that is itself a tracer. It spawns its own w
 
 ## Launch
 
-`t3_thread_launch`, `runtimeMode: "full-access"`, the model Mattia picked for all workers (workers.md, Confirm the model), title `<EPIC-ID> · epic <slug>`, and a worktree on a new epic branch: `{"type":"worktree","baseRef":"<defaultBranch>","branch":"<epic-slug>","startFromOrigin":false}`. `baseRef` is an integration branch when the epic starts on unmerged work (below). Seed the worktree as in workers.md. Brief over a screenful: handoff doc (handoff.md), pointer as the message.
+`t3_thread_launch`, `runtimeMode: "full-access"`, the model Mattia picked for all workers (workers.md, Models), title `<EPIC-ID> · epic <slug>`, and a worktree on a new epic branch: `{"type":"worktree","baseRef":"<defaultBranch>","branch":"<epic-slug>","startFromOrigin":false}`. `baseRef` is an integration branch when the epic starts on unmerged work (below). Seed the worktree as in workers.md. The brief is always a handoff doc (handoff.md), with the pointer in the message, so both of you can re-read it after a compaction.
 
 The message starts with `/tracer <tracker>` and then **overrides that win over the skill**:
 
@@ -20,18 +20,20 @@ You are the sub-tracer for <EPIC-ID>, epic branch `<epic>`. Parent thread: <PARE
 - Your worktree is your "main checkout" and `<epic>` is your `<defaultBranch>`; preflight accepts that. Your workers branch from `<epic>`; you merge them into it following merge.md (review, full checks, rebase notices).
 - You never push, open PRs or merge into `<realDefaultBranch>`. merge.md's Push section does not apply.
 - Model and skills are decided: workers run <model> and start with <skill, e.g. /implement>. Do not ask again.
-- The epic and its sub-issues are <IDS>. Set their statuses as the skill says; leave the epic In Progress, the parent closes it.
+- The epic and its sub-issues are <IDS>. A sub-issue goes In Review when merged into `<epic>`, and Done only once its hand check passed (or at that merge when it needs none). Leave the epic In Progress; the parent closes it.
+- Grants and away mode from the parent: <none | the grant or away mode, restated>.
 - Order and parallelism come from the issue edges. Hand out the machine lock one worker at a time for timed runs or anything that swaps Mattia's app.
 - Ask Mattia directly in this thread for hand checks and decisions, never through the parent.
-- Report to the parent only when everything is done or you are blocked on the parent, via t3_thread_send, with: final branch and SHA, worktree clean, per-ticket summary, checks with real output, hand-check results, open decisions, unfixed findings filed as issues.
+- Report to the parent only when everything is done or you are blocked on the parent, via t3_thread_send (mode `queue`) as one message and your last act, with: final branch and SHA, worktree clean, per-ticket summary, checks with real output, hand-check results, open decisions, unfixed findings filed as issues.
 - AGENTS.md product rules still hold.
 ```
 
 ## Parent's job afterwards
 
+- Never `t3_thread_wait` on a sub-tracer: its report arrives as a message. If only a pointer arrives, read its thread (`view:"messages"`) before reviewing.
 - Review the whole epic diff (`git diff <defaultBranch>...<epic>`), focused on the shared hot paths.
 - `git merge-tree --write-tree <defaultBranch> <epic>` must print a tree with no conflicts.
-- Report to Mattia. Merge (merge.md) on his yes, push on a separate yes, then close the epic and settle the sub-tracer once it is merged.
+- Report to Mattia. Merge (merge.md) on his yes, push on a separate yes (or under a grant), then close the epic and settle the sub-tracer once it is merged.
 - Its report can be wrong about Mattia's machine ("kept at his request" when it was its own choice). Verify claims about his environment.
 
 ## Rebase notice to a sub-tracer

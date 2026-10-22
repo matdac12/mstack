@@ -10,6 +10,11 @@ Before choosing a kind, judge the task (read the issue and, unless obviously fre
 
 Unsure between ready and discussion: say which you lean to and why, and let him choose.
 
+Before spawning a ready task, check what the brief will claim:
+- Behaviour the issue describes: confirm it in the code first.
+- Owned files: derive them from what actually imports the code you will touch (grep its importers), not from folder names.
+- An issue another thread created or edited in the last few minutes: confirm its text with Mattia in one line.
+
 ## 2. One worktree per task
 
 A task = one issue = one branch = **one worktree**. Its threads (design, then execution, then a review fix) run in it one after another, so the spec, plan and installed dependencies are already there.
@@ -23,6 +28,8 @@ A task = one issue = one branch = **one worktree**. Its threads (design, then ex
 ## 3. Kinds
 
 Say the kind to Mattia in a word. Skills named below are assumed installed for every worker model (Mattia keeps Claude, OpenCode and Codex stocked); if a worker reports one missing, tell him.
+
+**User-only skills** (marked `disable-model-invocation`, such as `implement`) cannot be started by the worker itself. Put the slash command as the first line of the launch message (`/implement TRC-42`), then the brief or the handoff pointer.
 
 | Kind | Driven by | Output |
 | --- | --- | --- |

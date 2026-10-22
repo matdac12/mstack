@@ -2,25 +2,45 @@
 
 ## Models
 
-Mattia picks, **and you always ask before the first spawn** (see Confirm the model). Never launch on a default he has not confirmed. Claude models take only an `effort` option in T3 (no `contextWindow`; do not send one). Check the model's options with the `jq` below. For a **Design or Guide** thread always ask him, it is his thread. For any other model find the exact ids with `jq` on the file named in the `orchestrator_capabilities` result (it is huge; never read it whole): e.g. `jq -r '.providers[]|select(.driverKind=="claudeAgent")|.models[].id'`, `.models[]|select(.id=="<id>")|.options` for effort. His choice overrides the "use for" column. `t3_thread_configure` changes a running thread's model, only when he asks.
+Only these four. Another model only when Mattia names it.
 
-| Worker | `modelSelection` | Default for |
+| Worker | `modelSelection` | Use for |
 | --- | --- | --- |
-| DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash"}` | Guide, tests, docs. Not `deepseek-v4-pro` unless asked. |
-| Claude Sonnet 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-sonnet-5-5","options":[{"id":"effort","value":"medium"}]}` | Implementation, execute-a-plan, fixes, refactors, review passes. |
-| Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Hard design, tricky refactors, anything Sonnet struggled with. |
+| Claude Sonnet 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-sonnet-5-5","options":[{"id":"effort","value":"medium"}]}` | Implementation, execute-a-plan, fixes, refactors. The default. |
+| Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Design, hard refactors, anything Sonnet struggled with. |
+| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | Review passes and short tasks only: Mattia's limits there are tight. `serviceTier` is always `default`. |
+| DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash","options":[{"id":"variant","value":"high"}]}` | Guide, tests, docs. The only OpenCode model. |
 
-## Confirm the model (before the first spawn, and whenever the next worker could differ)
+Check a model's option ids in the capabilities file from preflight (`jq '.providers[]|select(.providerInstanceId=="<id>")|.models[]|select(.id=="<model>")|.options'`). Claude models take only `effort` (no `contextWindow`).
 
-Ask Mattia in one short question which model runs the worker(s): **Sonnet 5.5** or **Opus 5.5** (or another he names), with your recommendation for the kind of task. Wait for the answer; do not spawn first. His answer covers the workers of that batch; ask again if he changes the plan or a different kind of task comes up.
+**Choosing:**
+- **At his desk:** before the first spawn, propose a model per task with a one-line reason and wait for his pick. A model he names for a kind of task ("Sonnet for implementation") holds for the session: record it as a tracker comment and do not re-ask until a different kind of task comes up. A model named for one issue covers that issue only, and "like the last one" is not his choice.
+- **Away mode:** you choose, Claude only: Sonnet, Opus for hard work.
+- **Design or Guide** threads are his: always ask.
+- `t3_thread_configure` changes a running thread's model, only when he asks.
 
 Co-Authored-By trailer matches the model: `Claude Sonnet 5.5 <noreply@anthropic.com>`, `DeepSeek <noreply@opencode.ai>`; for others use the model's name.
 
 ## Tools
 
-- A thread Mattia sees: `t3_thread_launch` (`runtimeMode: "full-access"`). Quick child work you consume yourself: `Agent` or `delegate_task`.
-- Talk: `t3_thread_send` (`queue` for a follow-up after the current turn, `auto` steers); read `t3_thread_read`; wait `t3_thread_wait`. No retry key on launch: after an error, check `t3_thread_list` before retrying.
-- Your thread id: `jq -r .parentThreadId` on the capabilities result.
+- A thread Mattia sees: `t3_thread_launch` (`runtimeMode: "full-access"`). Quick child work you consume yourself: `Agent` or `delegate_task`. No retry key on launch: after an error, check `t3_thread_list` before retrying.
+- Talk: `t3_thread_send`, `queue` for notices and follow-ups (lands after the current turn), `auto` to steer a running turn.
+- Read: `t3_thread_read` with `view:"messages"`, `limit` about 5, `maxCharsPerItem` about 1500. The `activity` view only to diagnose a stuck worker, with a small limit.
+- List: `t3_thread_list` filtered (`titleContains`, `statuses`, `settled:false`); `includeSubagents` only when settling or checking a worker that looks done.
+- Big tracker issues: read recent comments with a limit, not the whole issue.
+- Your thread id: `parentThreadId` from preflight.
+
+## Heartbeat
+
+One safety net for a worker that forgets to report. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":1800000}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
+
+Each run, for every worker you launched that has no recorded report:
+- **Running:** nothing.
+- **Idle, and its last message has the report fields:** that is its report; record it.
+- **Idle without a report:** check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
+- **Waiting on a request** (`t3_pending_request_list`): tell Mattia.
+
+Nothing to do: end the turn in one line, without messaging Mattia.
 
 ## Worktree seeding (first thread of a task)
 
@@ -36,42 +56,60 @@ Installed dependencies are gitignored too, and a fresh install in every worktree
 - Lockfile differs, main has no install, or the ecosystem is unfamiliar: the normal install, once, with its cache flags.
 - The worker states in its report which path it took. Later threads of the task reuse the worktree and install nothing unless the lockfile changed.
 
-## Windows / Git Bash
+## Windows / Git Bash (you and the workers)
 
+- `git -C <repo>` instead of `cd` in compound commands: a `cd` moves the session's working directory.
 - `robocopy` from Git Bash: prefix `MSYS_NO_PATHCONV=1`, or `/E` is mangled (exit 16).
 - PowerShell from bash: wrap the command in single quotes so bash does not expand `$env:...`; build paths with `Join-Path $env:APPDATA ...`.
 - **Wildcards:** `settings.json.*` also matches `settings.json` (a trailing `.*` matches an empty extension). That deleted a live settings file with API keys. List the exact matches before deleting, or name each file.
 - **A running app locks its exe:** a release build into the same target dir fails at the final copy ("Access denied, os error 5"), and `| tail` can hide it. Stop the app, build, restart it, check the exe timestamp.
-- A worktree folder that will not delete is usually held by leftover dev servers (vite, esbuild, node). Find them with `Get-CimInstance Win32_Process` filtered on the path in `ExecutablePath`/`CommandLine`, stop those, then delete. Never kill `claude.exe` sessions.
 - A denied `rm` or a blocked command: do not retry the same thing; ask Mattia.
 
-## Workers that swap his running app
+## Shared machine
 
-When a worker tests a build in place of the app Mattia uses daily, put this in its brief:
-- Before stopping the app, check which exe is running.
-- Back up the app's settings first, restore them byte-identical afterwards, and restart his normal app from its usual shortcut.
-- Report the final machine state truthfully.
-- Several workers may do this at once: tell each about the others, or hand out one lock (subtracer.md).
+Workers share Mattia's laptop, often while he is using it.
+- **One lock**, handed out by you to one worker at a time: timed runs, anything that stops, swaps or drives his apps, GUI tests. Grant it by message; the worker waits for your message instead of polling. While a timed run holds it, launch no build worker and run no build yourself. The project's AGENTS.md may name a lock file.
+- Workers stop only processes they started, by PID or process tree (`taskkill /T /PID <pid>`); never by image name (`node`, `cargo`).
+- Synthetic keystrokes and clicks go only to the test app's own window, never to whatever has focus.
+- With other workers active, throttle test runners (`--maxWorkers=4` for vitest or jest).
+- Swapping his running app: check which exe runs before stopping it; back up its settings and restore them byte-identical; restart his normal app from its usual shortcut; report the final machine state truthfully.
+- **Away mode** (SKILL.md) frees the machine for the work: full CPU, parallel builds, stopping and restarting his apps without asking, GUI tests with real input. The lock for timed runs, own-process kills and the settings restore still hold.
 
 ## Brief
 
-Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer; the Rules and Report back blocks go in either way.
+Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer; the Rules and Report back blocks go in either way. A user-only skill (kinds.md) goes as the first line of the launch message, before the brief or the pointer.
 
 ```
 Do <ISSUE-ID> in the <project> repo (this worktree, branch `<issue-id>-slug`, based on the local <defaultBranch>).
 
 ## The issue
 <title, expected result, constraints>
+Mattia's words: "<verbatim, when the issue comes from his feedback or a hand check>"
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
+Private project notes: <paths, if the project has them; read them first>.
 
 ## Rules
 - Read AGENTS.md / CLAUDE.md first. Issues live in <Linear|Traccia> (Traccia: call whoami first); do not write to the other tracker. Set <ISSUE-ID> In Progress when you start, with a short comment; the orchestrator sets every later status.
 - First thing, install dependencies as in "Dependencies" above (reuse main's install when the lockfile is identical; do not run a full fresh install by reflex).
-- Add or update tests; run the project's check command and any e2e the change touches; report real output, failures included.
+- Add or update tests. Before reporting, run the project's full fast check (the whole unit suite, not only the tests for your files) and any e2e the change touches; report real output, failures included. Run builds and tests in the foreground: end your turn with no background job running.
+- Update README and docs for any user-visible change.
 - Stay local: commit on your branch (message mentions <ISSUE-ID> and ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
+- Shared machine: stop only processes you started; take the machine lock from the orchestrator for timed runs, app swaps and GUI tests. Away mode: <on | off>.
 - Say what Mattia should check by eye if you cannot see the running app.
 - On Windows, never delete with a wildcard before listing its exact matches.
 
-## Report back (mandatory)
-To the orchestrator, thread <ORCHESTRATOR_THREAD_ID>: what changed, branch and last commit SHA, that the worktree is clean, decisions you took alone (so he can veto), test results, what you did NOT verify, findings you did not fix (file, why, size), anything for Mattia to decide. Also send a 5-line summary with `t3_thread_send`.
+## Report back (mandatory, your last act)
+When done or blocked, send this with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID>, mode `queue`, as your final message:
+
+REPORT <ISSUE-ID>
+- Status: done | blocked (why)
+- Branch: <branch> @ <commit SHA>; worktree clean: yes | no
+- Changed: <what, in a few lines>
+- Checks: <command> → <exit code>; failures named
+- Dependencies: <which install path you took>
+- Hand check for Mattia: <numbered steps, or "none">
+- Decided alone (he may veto): <list or "none">
+- Not verified: <list or "none">
+- Findings not fixed: <file, why, size>
+- For Mattia to decide: <list or "none">
 ```

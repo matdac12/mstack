@@ -13,6 +13,7 @@ Tools: the `traccia` MCP. Run `whoami` first (expect actor `agent`). Default pro
 - Knowledge layer: **memories** (titled markdown notes with tags) and **documents** (files). Read the relevant ones before briefing a worker (`list_memories`/`get_memory`; `list_documents`/`get_document`), and record durable facts with `save_memory` and files with `create_document`. Agents may purge memories and documents, unlike other types.
 - Triage with Mattia: for each `needs-triage` issue give a recommendation (do, backlog with what would promote it, drop), apply his answer with a short decision comment, remove `needs-triage`.
 - Linear identifiers (`MAT-nnn`) from the old archive are findable by searching Traccia for that text. Look one up before telling anyone its TRC number; never assume a mapping.
+- Milestone descriptions are not returned by the tools: put working rules for a milestone in an epic issue or a document.
 - Branch naming: `trc-NNN-slug`. Commit messages mention `TRC-NNN`.
 
 ## Linear
@@ -23,5 +24,5 @@ Tools: the `linear` MCP (`mcp__linear__*`; load schemas with ToolSearch first).
 - Statuses come from `list_issue_statuses` for the team; use only names that exist (map In Progress / In Review / Done / blocked onto them; no "blocked" status means comment plus an existing label).
 - Labels via `list_issue_labels`; do not create one without Mattia's say-so.
 - Comments with `save_comment` (short decision notes, branch and commit). Put the issue id in the branch name.
-- Branch naming: the issue's `gitBranchName` from `get_issue`. Commit messages mention `<ID>`.
+- Branch naming: `<id>-<2-3 words>`, lowercase (`mat-1777-contact-sync`), not Linear's long `gitBranchName`. Commit messages mention `<ID>`.
 - Follow the repo's `AGENTS.md` if it adds Linear conventions (it wins).
