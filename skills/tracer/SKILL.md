@@ -49,11 +49,13 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "It's a tiny fix, quicker to do it myself." | Send it to a worker, unless he asked you to make it. |
 | "The guard blocked it, so I'll do it another way." | Stop and ask him. |
 | "He said conclude, but the goal hook keeps pushing me on." | His latest message wins: wrap up and stop. |
+| "The spec is detailed enough, the worker doesn't need a skill." | Name the skill on the brief (kinds.md, Which skill implements). A report with "Skill used: none" on code work goes back. |
+| "Two workers in parallel, so I'll skip the sub-tracer question." | 3+ tickets or a parallel chance: propose a sub-tracer in one line. Under that, plain workers. |
 
 ## The loop
 
 1. **Plan** with Mattia; **file** each piece as a tracker issue (search first).
-2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). A big epic with a blocking chain gets a sub-tracer instead of many workers (subtracer.md).
+2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill (kinds.md). A spec or plan with 3+ tickets: propose a sub-tracer instead of many workers, and let Mattia choose (subtracer.md).
 3. **Wait: end your turn.** Reports arrive in this thread as messages and start your next turn. Polling burns context, and a report landing mid-call cuts that call off. The **heartbeat** (workers.md) catches a worker that forgets to report. Use `t3_thread_wait` only right before touching a branch at merge time.
 4. **Record** the report in the tracker, **review** the real diff, tell Mattia what changed and recommend.
 5. **Merge** on his yes or grant, verify, then tell the other workers to rebase (merge.md).

@@ -4,8 +4,9 @@ A **sub-tracer** is a worker thread that is itself a tracer. It spawns its own w
 
 ## When
 
-- An epic of roughly 3+ tickets with a blocking chain (A → B → C), or when Mattia asks. Small, independent fixes stay plain workers.
-- A design thread (kinds.md) usually comes first and produces the spec, ADRs and tickets; the sub-tracer then executes them.
+- One unit of work (a spec or a plan) that splits into 3+ tickets and that you can hand over whole, or when Mattia asks. Two tasks, independent fixes and parallel front/back workers on one small change stay plain workers: no sub-tracer for "anything".
+- **You propose, he chooses.** When you see 3+ tickets, or a chance to parallelise that would speed the work up, say so in one line with a recommendation: "delegate to a sub-tracer and wait for its report, or I manage the workers myself?" Never launch one unasked.
+- A design thread (kinds.md) usually comes first and produces the spec and tickets; the sub-tracer then executes them.
 
 ## Launch
 
@@ -19,7 +20,7 @@ The message starts with `/tracer <tracker>` and then **overrides that win over t
 You are the sub-tracer for <EPIC-ID>, epic branch `<epic>`. Parent thread: <PARENT_THREAD_ID>. These overrides win over the skill:
 - Your worktree is your "main checkout" and `<epic>` is your `<defaultBranch>`; preflight accepts that. Your workers branch from `<epic>`; you merge them into it following merge.md (review, full checks, rebase notices).
 - You never push, open PRs or merge into `<realDefaultBranch>`. merge.md's Push section does not apply.
-- Model and skills are decided: workers run <model> and start with <skill, e.g. /implement>. Do not ask again.
+- Model and skills are decided: workers run <model> and use <skill, from kinds.md "Which skill implements", e.g. /implement as the first line of each launch>. Do not ask again.
 - The epic and its sub-issues are <IDS>. A sub-issue goes In Review when merged into `<epic>`, and Done only once its hand check passed (or at that merge when it needs none). Leave the epic In Progress; the parent closes it.
 - Grants and away mode from the parent: <none | the grant or away mode, restated>.
 - Order and parallelism come from the issue edges. Hand out the machine lock one worker at a time for timed runs or anything that swaps Mattia's app.

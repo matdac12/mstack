@@ -86,6 +86,7 @@ Do <ISSUE-ID> in the <project> repo (this worktree, branch `<issue-id>-slug`, ba
 <title, expected result, constraints>
 Mattia's words: "<verbatim, when the issue comes from his feedback or a hand check>"
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
+Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
 Private project notes: <paths, if the project has them; read them first>.
 
 ## Rules
@@ -105,6 +106,7 @@ REPORT <ISSUE-ID>
 - Status: done | blocked (why)
 - Branch: <branch> @ <commit SHA>; worktree clean: yes | no
 - Changed: <what, in a few lines>
+- Skill used: <name> | none (why)
 - Checks: <command> → <exit code>; failures named
 - Dependencies: <which install path you took>
 - Hand check for Mattia: <numbered steps, or "none">
