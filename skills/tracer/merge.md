@@ -2,7 +2,7 @@
 
 ## Review
 
-Read the real diff (`git diff <defaultBranch>...<branch>`, `git log`), not the report. Check the claimed tests, that changed files stay within the owned files, that the worktree is clean and committed (`git -C <path> status --porcelain`), overlap with other unmerged branches, and any warning the worker raised. Execute-a-plan work is reviewed against the plan. Tell Mattia in a few lines: what changed, tests, caveats, what to look at by eye, a recommendation.
+Read the real diff (`git diff <defaultBranch>...<branch>`, `git log`), not the report. Check the claimed tests, that changed files stay within the owned files, that the worktree is clean and committed (`git -C <path> status --porcelain`), overlap with other unmerged branches, and any warning the worker raised. Execute-a-plan work is reviewed against the plan. A worker's report of a rejected command or a workaround is never a clean review: take it to Mattia before merging or pushing. Tell Mattia in a few lines: what changed, tests, caveats, what to look at by eye, a recommendation.
 
 ## Merge
 
@@ -12,7 +12,7 @@ A yes naming the branches ("merge all three"), or a grant covering them (SKILL.m
 2. Note `git rev-parse <defaultBranch>`, then `git merge --no-ff <branch>`. Write commit and merge messages with `-F` from a heredoc, so backticks are not run as commands.
 3. **Conflicts:** `git merge --abort` first (never leave main half-merged). Then **you** resolve them in the worker's idle, clean worktree: merge `<defaultBranch>` into the branch, resolve only the conflicting hunks keeping both sides' intent, check no conflict markers remain, rerun the project's checks, commit, retry. Unclear intent, or files outside the task's boundaries: stop and ask.
 4. **Verify** the merged result with the project's own declared commands (package.json scripts via its lockfile's manager, pytest, Makefile `test`), typecheck and lint before tests. Never invent a command; no harness means say it is unverified and ask before Done. Record command and exit code.
-   - **Known-red baseline:** a check already red on a clean `<defaultBranch>` has its failing tests listed by name on a tracker issue. The merge passes only if it fails exactly those, no new ones. No home-made lenient gate scripts; the real fix is an issue in the repo.
+   - **Known-red baseline:** a check already red on a clean `<defaultBranch>` has its failing tests listed by name on a tracker issue. The merge passes locally only if it fails exactly those, no new ones. It still counts as red for push (SKILL.md: red checks need Mattia's own yes), so name the baseline failures when you ask. No home-made lenient gate scripts; the real fix is an issue in the repo.
    - **Project-declared gate:** if the project's AGENTS.md or private notes declare a gate you cannot run locally (remote CI over SSH), follow it. When it needs a pushed ref, push only a temporary `ci/<short-sha>` branch (on his yes or grant: it is a network write), merge only when the `<defaultBranch>` tree equals the tested tree, delete the `ci/` branch afterwards, and never push `<defaultBranch>` just to test it.
 5. **Green:** set the issue Done, or In Review with "hand check owed" (SKILL.md, Tracker discipline), then tell the others to rebase (below). **Red** (local or the declared gate): undo only this merge with `git revert -m 1 HEAD` (never `reset --hard`, and never a fix merged on top), set the issue back to In Review or blocked with a comment, tell Mattia. Never leave `<defaultBranch>` red for others to branch from. To merge a reverted branch again, first revert the revert. Still red after the revert: stop, tell him, and find the culprit among recent merges before merging more.
 6. Only then the next branch.
@@ -41,10 +41,10 @@ Automatic, without being asked, for threads you launched only (never another orc
 **Settle** a thread the moment it is no longer needed: `t3_thread_organize {"action":"settle","threadId":"<id>"}` (reversible with `unsettle`; archive only if he asks).
 - Implement, fix and execute threads: once their merge is verified.
 - Review and investigate threads: once the report is recorded.
-- Design and guide threads: once the execution thread is launched from their plan, or the design is dropped.
+- Design and guide threads: once the execution thread is launched from their plan, or the design is dropped. Their unmerged branch is now the execution thread's; keep the worktree until the merge.
 - Cancelled or abandoned threads: right away.
 
-Settle the thread's subagents with it: find them with one `t3_thread_list {"settled":false,"includeSubagents":true}` and settle them in parallel batches. A settle fails while the thread's turn is still running: `t3_thread_wait` it first. **Never** settle a thread that is running, has a pending request, has an unrecorded report, or has an unmerged branch; so never a running sub-tracer or its active workers. Tell Mattia in one line what you settled.
+Settle the thread's subagents with it: find them with one `t3_thread_list {"settled":false,"includeSubagents":true}` and settle them in parallel batches. A settle fails while the thread's turn is still running: `t3_thread_wait` it first. **Never** settle a thread that is running, has a pending request, has an unrecorded report, or owns an unmerged branch (a design thread whose branch moved on to an execution thread does not); so never a running sub-tracer or its active workers. Tell Mattia in one line what you settled.
 
 **Clean up** each finished task's worktree, in this order (a parked thread or a dev server holds the folder on Windows):
 1. Settle its threads, and stop any dev server running from that worktree (find it with `Get-CimInstance Win32_Process` filtered on the path in `ExecutablePath` or `CommandLine`; never stop `claude.exe`).

@@ -76,7 +76,7 @@ After a compaction or a resumed summary, re-read this file, workers.md and merge
 
 ## Opening move and roll call
 
-After preflight, read the open and in-progress issues, `t3_thread_list`, `git status`, `git worktree list`, unmerged branches and unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`). Show Mattia a short picture plus what looks next, and ask what he wants (or start the loop with the goal he gave). Never invent work.
+After preflight, run `git fetch origin`, then read the open and in-progress issues, `t3_thread_list`, `git status`, `git worktree list`, unmerged branches and unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`). Show Mattia a short picture plus what looks next, and ask what he wants (or start the loop with the goal he gave). Never invent work.
 - Git beats tracker status: check tags and `git branch --merged` before calling anything ready or done.
 - Unpushed commits stay a standing line in every status until pushed: on some projects a push is a production deploy, and work left unpushed for days surprises everyone.
 - Another orchestrator's threads on the same repo: name them, leave them alone, keep your merges off their branches.

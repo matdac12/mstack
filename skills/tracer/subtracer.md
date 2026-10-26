@@ -4,13 +4,13 @@ A **sub-tracer** is a worker thread that is itself a tracer. It spawns its own w
 
 ## When
 
-- One unit of work (a spec or a plan) that splits into 3+ tickets and that you can hand over whole, or when Mattia asks. Two tasks, independent fixes and parallel front/back workers on one small change stay plain workers: no sub-tracer for "anything".
-- **You propose, he chooses.** When you see 3+ tickets, or a chance to parallelise that would speed the work up, say so in one line with a recommendation: "delegate to a sub-tracer and wait for its report, or I manage the workers myself?" Never launch one unasked.
+- One unit of work (a spec or a plan) that splits into 3+ tickets and that you can hand over whole, or when Mattia asks. Two tasks, independent fixes and parallel front/back workers on one small change stay plain workers: no sub-tracer for "anything", and no proposal either.
+- **You propose, he chooses.** When you see 3+ tickets, say so in one line with a recommendation: "delegate to a sub-tracer and wait for its report, or I manage the workers myself?" Never launch one unasked.
 - A design thread (kinds.md) usually comes first and produces the spec and tickets; the sub-tracer then executes them.
 
 ## Launch
 
-`t3_thread_launch`, `runtimeMode: "full-access"`, the model Mattia picked for all workers (workers.md, Models), title `<EPIC-ID> · epic <slug>`, and a worktree on a new epic branch: `{"type":"worktree","baseRef":"<defaultBranch>","branch":"<epic-slug>","startFromOrigin":false}`. `baseRef` is an integration branch when the epic starts on unmerged work (below). Seed the worktree as in workers.md. The brief is always a handoff doc (handoff.md), with the pointer in the message, so both of you can re-read it after a compaction.
+`t3_thread_launch`, `runtimeMode: "full-access"`, the model Mattia picked for all workers (workers.md, Models), title `<EPIC-ID> · epic <slug>`, and a worktree on a new epic branch: `{"type":"worktree","baseRef":"<defaultBranch>","branch":"<epic-slug>","startFromOrigin":false}`. `baseRef` is the commit that holds the approved spec, plan and tickets: the design branch when they are not merged yet, else an integration branch (below). **You decide the epic worktree and branch** (record path and branch on the epic issue); the sub-tracer creates no other checkout of its own, and every worker it launches gets a worktree branching from the epic branch. Nothing the sub-tracer or its workers do touches the main checkout or other branches. Seed the worktree as in workers.md. The brief is always a handoff doc (handoff.md), with the pointer in the message, so both of you can re-read it after a compaction.
 
 The message starts with `/tracer <tracker>` and then **overrides that win over the skill**:
 

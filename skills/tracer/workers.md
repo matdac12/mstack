@@ -92,6 +92,8 @@ Private project notes: <paths, if the project has them; read them first>.
 ## Rules
 - Read AGENTS.md / CLAUDE.md first. Issues live in <Linear|Traccia> (Traccia: call whoami first); do not write to the other tracker. Set <ISSUE-ID> In Progress when you start, with a short comment; the orchestrator sets every later status.
 - First thing, install dependencies as in "Dependencies" above (reuse main's install when the lockfile is identical; do not run a full fresh install by reflex).
+- Before editing code, load the brief's `Skill:` and follow it; if it is unavailable, stop and report blocked.
+- If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`).
 - Add or update tests. Before reporting, run the project's full fast check (the whole unit suite, not only the tests for your files) and any e2e the change touches; report real output, failures included. Run builds and tests in the foreground: end your turn with no background job running.
 - Update README and docs for any user-visible change.
 - Stay local: commit on your branch (message mentions <ISSUE-ID> and ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
