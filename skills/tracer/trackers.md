@@ -13,7 +13,7 @@ Tools: the `traccia` MCP. Run `whoami` first (expect actor `agent`). Default pro
 - Knowledge layer: **memories** (titled markdown notes with tags) and **documents** (files). Read the relevant ones before briefing a worker (`list_memories`/`get_memory`; `list_documents`/`get_document`), and record durable facts with `save_memory` and files with `create_document`. Agents may purge memories and documents, unlike other types.
 - Triage with Mattia: for each `needs-triage` issue give a recommendation (do, backlog with what would promote it, drop), apply his answer with a short decision comment, remove `needs-triage`.
 - Linear identifiers (`MAT-nnn`) from the old archive are findable by searching Traccia for that text. Look one up before telling anyone its TRC number; never assume a mapping.
-- Milestone descriptions are not returned by the tools: put working rules for a milestone in an epic issue or a document.
+- A milestone's description (its "Rules for agents") comes from `get_project` on the project, which returns every milestone with its full text. `list_milestones` does not return it. Read it before briefing a worker on that milestone, and point the brief at it (workers do the same through `get_project`).
 - Branch naming: `trc-NNN-slug`. Commit messages mention `TRC-NNN`.
 
 ## Linear
