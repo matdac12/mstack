@@ -105,7 +105,7 @@ Mattia's words: "<verbatim, when the issue comes from his feedback or a hand che
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
 Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
 Private project notes: <paths, if the project has them; read them first>.
-Scale: <the project's scale, copied from preflight: who uses it, how much, in production or not>
+Scale: <the project's scale from its private notes; keep it out of every file you commit>
 Repo: <personal | client>
 
 ## Rules
