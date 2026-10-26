@@ -22,6 +22,7 @@ Each tool is its own repo with its own history and releases. mstack is where the
 | [**tasca**](https://github.com/matdac12/tasca) | A file shelf that slides out of the screen edge. Park files mid-drag, drag them out later. Tray icon, its own shortcut (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd> by default), prebuilt `.exe` on its Releases page. | Rust · Win32 |
 | [**hyperkey**](https://github.com/matdac12/hyperkey) | Caps Lock as a hyper key: open or focus apps, switch virtual desktops. | Python · AutoHotkey v2 |
 | [**musica**](https://github.com/matdac12/musica) | Background music from YouTube, from the tray. Search, play, keep working. No browser tab, no ads. *Prototype.* | Rust · Win32 · mpv |
+| [**scrivi**](https://github.com/matdac12/scrivi) | A minimal Notepad replacement. Every plain-text file opens in tabs in one window; markdown gets light styling and a rendered view on <kbd>Ctrl</kbd>+<kbd>E</kbd>. *Planned.* | Rust · Win32 |
 
 They are separate apps that compose. Hyperkey is the glue: <kbd>Caps</kbd>+<kbd>S</kbd> opens annota, <kbd>Caps</kbd>+<kbd>D</kbd> opens tasca, <kbd>Caps</kbd>+<kbd>M</kbd> opens musica, and you dictate into annota's notes with parla like into any text box.
 
@@ -51,7 +52,7 @@ mstack/
 ├── skills/        agent skills, tracked here
 ├── tools.json     the tool manifest setup.ps1 reads
 ├── setup.ps1
-└── parla/ traccia/ annota/ tasca/ hyperkey/ musica/   ← cloned by setup.ps1, each its own repo
+└── parla/ traccia/ annota/ tasca/ hyperkey/ musica/ scrivi/  ← cloned by setup.ps1, each its own repo
 ```
 
 ## License

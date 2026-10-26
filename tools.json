@@ -35,6 +35,12 @@
       "repo": "https://github.com/matdac12/musica",
       "summary": "Background music from YouTube in the tray: Caps+M, search, play. No browser tab.",
       "stack": "Rust (Win32) + mpv"
+    },
+    {
+      "name": "scrivi",
+      "repo": "https://github.com/matdac12/scrivi",
+      "summary": "A minimal Notepad replacement: tabs, plain text everywhere, light markdown styling and a rendered view.",
+      "stack": "Rust (Win32)"
     }
   ]
 }

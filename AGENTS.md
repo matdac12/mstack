@@ -4,7 +4,7 @@ The umbrella repo for Mattia's agentic toolbox for Windows. Public.
 
 ## Layout
 
-- `parla/ traccia/ tasca/ annota/ hyperkey/ musica/` are **separate git repos**, gitignored here. Work on a tool inside its own folder; its commits and pushes go to its own repo. Never `git add` them here or turn them into submodules.
+- `parla/ traccia/ tasca/ annota/ hyperkey/ musica/ scrivi/` are **separate git repos**, gitignored here. Work on a tool inside its own folder; its commits and pushes go to its own repo. Never `git add` them here or turn them into submodules.
 - `skills/<name>/` holds agent skills. This is their real home: `~/.claude/skills/<name>` and `~/.agents/skills/<name>` are junctions into it, so edits here are live.
 - `tools.json` is the tool manifest; `setup.ps1` reads it. Adding a tool means a `tools.json` entry, a `.gitignore` line, and a row in `README.md`.
 - `notes/` is local-only and gitignored.
