@@ -24,11 +24,23 @@ Co-Authored-By trailer matches the model: `Claude Sonnet 5.5 <noreply@anthropic.
 ## Tools
 
 - A thread Mattia sees: `t3_thread_launch` (`runtimeMode: "full-access"`). Quick child work you consume yourself: `Agent` or `delegate_task`. No retry key on launch: after an error, check `t3_thread_list` before retrying.
-- Talk: `t3_thread_send`, `queue` for notices and follow-ups (lands after the current turn), `auto` to steer a running turn.
+- Talk: `t3_thread_send`, mode chosen per message (Talking to a worker).
 - Read: `t3_thread_read` with `view:"messages"`, `limit` about 5, `maxCharsPerItem` about 1500. The `activity` view only to diagnose a stuck worker, with a small limit.
 - List: `t3_thread_list` filtered (`titleContains`, `statuses`, `settled:false`); `includeSubagents` only when settling or checking a worker that looks done.
 - Big tracker issues: read recent comments with a limit, not the whole issue.
 - Your thread id: `parentThreadId` from preflight.
+
+## Talking to a worker
+
+A worker's turn often runs 10 to 20 minutes, often the whole task, and a `queue` message waits for that turn to end: it can land after the worker has already reported. Before each send to a running worker, read its last messages and weigh them against this chat, then ask: **would this message lose value by arriving only after the current turn?**
+
+- **Yes: `steer`.** It reaches the running turn at its next step. Corrections to the approach, a changed or clarified requirement, an answer it is waiting on or working around, a `<defaultBranch>` move near its files, a machine-lock grant or release, a stop. Anything Mattia just asked to change is urgent for the worker it touches.
+- **No: `queue`.** It belongs after the current turn: a follow-up task, a nudge to a worker already writing its report.
+- **Unsure: `steer`.** Put the timing in the words ("when your current step is committed, rebase…"); arriving early costs nothing, arriving late costs the work in between.
+- **Idle worker:** `auto` starts it.
+- `restart` only when Mattia asks.
+
+A queued message that turns urgent: find it with `t3_queue_list`, then `t3_queue_promote_to_steer`.
 
 ## Heartbeat
 

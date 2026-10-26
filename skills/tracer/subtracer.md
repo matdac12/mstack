@@ -39,7 +39,7 @@ You are the sub-tracer for <EPIC-ID>, epic branch `<epic>`. Parent thread: <PARE
 
 ## Rebase notice to a sub-tracer
 
-When `<defaultBranch>` moves under it, or its base gets fixes: `t3_thread_send`, mode `queue`, a stable `clientRequestId`: "`<defaultBranch>` moved. Between tickets, merge it into your epic branch, rerun checks, and tell your running workers to rebase onto the epic branch."
+When `<defaultBranch>` moves under it, or its base gets fixes: `t3_thread_send`, mode per workers.md (Talking to a worker), a stable `clientRequestId`: "`<defaultBranch>` moved. Between tickets, merge it into your epic branch, rerun checks, and tell your running workers to rebase onto the epic branch."
 
 ## Starting on unmerged work
 

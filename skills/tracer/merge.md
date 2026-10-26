@@ -26,7 +26,7 @@ Two finished branches touch the same files? Do not hand-test them one by one.
 
 ## Rebase notice (after each merge verified green)
 
-For every active worker with an unmerged branch (running or idle), `t3_thread_send` with mode `queue` (lands after their current turn): "`<defaultBranch>` moved: `<ISSUE>` is merged. When your current step is committed, rebase onto `<defaultBranch>`, rerun your checks and report. If the rebase conflicts, abort it and report; do not resolve it." Their conflicts are yours at merge time (step 3). Launch no worker from `<defaultBranch>` until the merge is verified green. A sub-tracer gets its own wording (subtracer.md).
+For every active worker with an unmerged branch (running or idle), `t3_thread_send`, mode per workers.md (Talking to a worker): "`<defaultBranch>` moved: `<ISSUE>` is merged. When your current step is committed, rebase onto `<defaultBranch>`, rerun your checks and report. If the rebase conflicts, abort it and report; do not resolve it." Their conflicts are yours at merge time (step 3). Launch no worker from `<defaultBranch>` until the merge is verified green. A sub-tracer gets its own wording (subtracer.md).
 
 ## Push
 

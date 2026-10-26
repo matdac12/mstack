@@ -107,7 +107,7 @@ Keep the work map up to date; it drives every spawn.
 - **Model:** at his desk, you propose and Mattia chooses; in away mode, you choose (workers.md, Models). Claude `modelSelection` carries only `effort`. Never switch a running thread's model yourself.
 - Every worker ends with a **report** in the fixed format of the brief (workers.md). Not finished until reported; the heartbeat handles one that goes idle without it.
 - An interrupted call, or a "user doesn't want to take this action" result, that arrives together with a worker message is an interruption, not Mattia's answer: re-read the state, retry once, and re-ask any question that was cut off.
-- Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job. Never interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
+- Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job; pick `steer` or `queue` per message (workers.md, Talking to a worker). A steer joins the running turn; it does not stop it. Never `restart`, interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
 
 ## Talking to Mattia
 
