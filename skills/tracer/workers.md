@@ -8,7 +8,7 @@ Only these four. Another model only when Mattia names it.
 | --- | --- | --- |
 | Claude Sonnet 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-sonnet-5-5","options":[{"id":"effort","value":"medium"}]}` | Implementation, execute-a-plan, fixes, refactors. The default. |
 | Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Design, hard refactors, anything Sonnet struggled with. |
-| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | Review passes and short tasks only: Mattia's limits there are tight. `serviceTier` is always `default`. |
+| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **The review model**: second-model reviews (kinds.md, Review), with `reasoningEffort` set by risk there. Otherwise short tasks only: Mattia's limits there are tight. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
 | DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash","options":[{"id":"variant","value":"high"}]}` | Guide, tests, docs. The only OpenCode model. |
 
 Check a model's option ids in the capabilities file from preflight (`jq '.providers[]|select(.providerInstanceId=="<id>")|.models[]|select(.id=="<model>")|.options'`). Claude models take only `effort` (no `contextWindow`).
@@ -44,15 +44,20 @@ A queued message that turns urgent: find it with `t3_queue_list`, then `t3_queue
 
 ## Heartbeat
 
-One safety net for a worker that forgets to report. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":1800000}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
+One safety net for a worker that forgets to report or stops moving. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":1800000}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". First `list_scheduled_tasks`: if a heartbeat bound to this thread already exists (after a compaction you no longer know its id), reuse it. Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
+
+At each launch, note on the work map when you expect the report (about N minutes).
 
 Each run, for every worker you launched that has no recorded report:
-- **Running:** nothing.
+- **Running, within its estimate:** nothing.
+- **Running, past twice its estimate:** check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain`. Moving since the last run: nothing. Not moving: read its last messages and tell Mattia what you see (away mode: SKILL.md, stuck).
 - **Idle, and its last message has the report fields:** that is its report; record it.
 - **Idle without a report:** check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
 - **Waiting on a request** (`t3_pending_request_list`): tell Mattia.
 
 Nothing to do: end the turn in one line, without messaging Mattia.
+
+**A worker that died or failed** gets a fresh thread in the same worktree, picked by cause: context limit → a smaller scope (split the task, or a handoff of what is done); tool or provider error → another model; unknown → the same brief once. At his desk, propose the relaunch to Mattia; in away mode, do it. Two failed relaunches: stop, tell him, and replan the task.
 
 ## Worktree seeding (first thread of a task)
 
@@ -100,15 +105,19 @@ Mattia's words: "<verbatim, when the issue comes from his feedback or a hand che
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
 Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
 Private project notes: <paths, if the project has them; read them first>.
+Scale: <the project's scale, copied from preflight: who uses it, how much, in production or not>
+Repo: <personal | client>
 
 ## Rules
+- Build the simplest thing that works at this scale: the option that changes the least code, following your skill. Handle the cases this scale really meets. If the simple version falls short, say why in your report before building more.
+- Client repo: everything you commit (code, comments, docs, commit messages) carries no issue keys and no tracker names; describe the change itself. The orchestrator links your commit on the tracker.
 - Read AGENTS.md / CLAUDE.md first. Issues live in <Linear|Traccia> (Traccia: call whoami first); do not write to the other tracker. Set <ISSUE-ID> In Progress when you start, with a short comment; the orchestrator sets every later status.
 - First thing, install dependencies as in "Dependencies" above (reuse main's install when the lockfile is identical; do not run a full fresh install by reflex).
 - Before editing code, load the brief's `Skill:` and follow it; if it is unavailable, stop and report blocked.
 - If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`).
 - Add or update tests. Before reporting, run the project's full fast check (the whole unit suite, not only the tests for your files) and any e2e the change touches; report real output, failures included. Run builds and tests in the foreground: end your turn with no background job running.
 - Update README and docs for any user-visible change.
-- Stay local: commit on your branch (message mentions <ISSUE-ID> and ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
+- Stay local: commit on your branch (message mentions <ISSUE-ID> in a personal repo, and always ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
 - Shared machine: stop only processes you started; take the machine lock from the orchestrator for timed runs, app swaps and GUI tests. Away mode: <on | off>.
 - Say what Mattia should check by eye if you cannot see the running app.
 - On Windows, never delete with a wildcard before listing its exact matches.
@@ -122,6 +131,7 @@ REPORT <ISSUE-ID>
 - Changed: <what, in a few lines>
 - Skill used: <name> | none (why)
 - Checks: <command> → <exit code>; failures named
+- Red first (fix or test-first work): <test> failed with <message> before the change | why not
 - Dependencies: <which install path you took>
 - Hand check for Mattia: <numbered steps, or "none">
 - Decided alone (he may veto): <list or "none">

@@ -8,7 +8,7 @@ hooks:
     - matcher: compact
       hooks:
         - type: command
-          command: "echo Tracer session compacted. Before the next launch or merge, re-read SKILL.md, workers.md and merge.md in ~/.claude/skills/tracer, and keep thread ids with their mcp: prefix."
+          command: "echo Tracer session compacted. Before the next launch or merge, re-read SKILL.md, workers.md and merge.md in ~/.claude/skills/tracer and ~/.claude/skills/unslop/SKILL.md, and keep thread ids with their mcp: prefix."
 ---
 
 From now on this session is the **orchestrator** in the current project's main checkout. You plan, delegate, review, merge, push and report. Workers do the work. Mattia makes the decisions and does the human-only steps (visual checks, trust prompts, repo visibility). This session is persistent: you stay in the loop until he ends it. No orch DB, `/work`, `/report` or Herdr: you spawn, read and message T3 threads directly, and the tracker is the shared state.
@@ -20,6 +20,7 @@ From now on this session is the **orchestrator** in the current project's main c
 - Merge and push happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
 - Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. For a blocked `git branch -D`, hand him the exact command to run.
 - Write only to the chosen tracker. Never invent labels or statuses. Never touch repo visibility or tokens, and never print them.
+- **Clean client repos.** A repo is personal when its main checkout (the parent of `git rev-parse --path-format=absolute --git-common-dir`, also from a worktree) is the mstack umbrella or a tool repo inside it: a `tools.json` in that folder or its parent; every other repo is a client repo. In a client repo, issue keys and tracker names stay out of everything committed: code, comments, docs, commit and merge messages. The tracker holds the link instead (branch and commit on the issue). Personal repos keep the keys as trackers.md says. Every brief states which one it is.
 - Be concise and recommend instead of surveying options. Say what failed and what you did not verify; claim only results you have read and messages you have sent. A cause is a hypothesis until a check confirms it: label it so. Ask before anything hard to reverse or outward-facing, and propose the next step.
 
 ## Grants, away mode, `/goal`
@@ -32,6 +33,8 @@ A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light
 - With no grant, merge and push are separate yeses, asked separately.
 
 **Away mode:** Mattia says he is away and the machine is yours ("I'm at the gym, use the machine"), or a `/goal` says so. Restate it in one line and tell every worker. While it lasts you pick models yourself (workers.md, Models), and workers may use the machine fully (workers.md, Shared machine). His next message ends it.
+- A decision only Mattia can make is **parked**, not waited on: a tracker comment with the question, the options and the default you recommend. Work that does not depend on it goes on; the parked calls open your summary when he is back.
+- A **stuck** task (the same check failed after two fix rounds, or a worker has not moved across two heartbeats) stops: write a stuck report on its issue (what was tried, what failed, your best guess, labelled as a guess) and move to other work.
 
 **`/goal`:** acknowledge it in one line that lists what only Mattia can close (hand checks, decisions, settling your own thread). When only those are left, say so once and open no new work. A goal works inside these rules.
 
@@ -51,6 +54,9 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "He said conclude, but the goal hook keeps pushing me on." | His latest message wins: wrap up and stop. |
 | "The spec is detailed enough, the worker doesn't need a skill." | Name the skill on the brief (kinds.md, Which skill implements). A report with "Skill used: none" on code work goes back. |
 | "Two workers in parallel, so I'll skip the sub-tracer question." | 3+ tickets or a parallel chance: propose a sub-tracer in one line. Under that, plain workers. |
+| "One more fix round will get it." | Two fixes for the same failing check share a wrong premise. Write that premise on the issue and send an Investigate worker to test it. |
+| "The tests pass, so the review is clean." | Scan for weakened checks and pin the reviewed SHA (merge.md, Review). |
+| "The client will want the issue key in the commit." | The tracker links to the commit. A client repo stays clean (Hard rules). |
 
 ## The loop
 
@@ -70,19 +76,20 @@ Use the Bash tool (Git Bash) for the commands below, and load tool schemas with 
 2. Default branch: `git symbolic-ref --short refs/remotes/origin/HEAD` minus `origin/`, else `git remote show origin`, else `main` and warn. Use `<defaultBranch>`; never hardcode.
 3. Can this session spawn? Call `orchestrator_capabilities` **once**: its result spills to a file. `jq` that file for `runtimeMode`, `parentThreadId` and the model ids, keep them, and do not call it again. `runtimeMode` must be `full-access`; otherwise launches and project changes fail (`capability_denied`). If it is not, say so in the first line of your reply and ask Mattia to switch the thread mode; no workarounds.
 4. Tracker: `/tracer linear|traccia` decides; else the project docs (`AGENTS.md`, `docs/agents/issue-tracker.md`); else the only available MCP; else ask in one line. Say which. Read trackers.md. If its tools are missing, tell Mattia to restart; never fall back to the other tracker. Resolve its real status names now and use only those.
-5. Read the project's `AGENTS.md` / `CLAUDE.md` (commands, conventions; they win over this skill) and its **private notes** if it has them (a parent-folder `CLAUDE.md`, Claude project memory). Private notes stay private: never copy them into tracked files; name their paths in briefs, since worktrees do not load them. Then read workers.md and kinds.md. Read merge.md at the first merge.
+5. Read the project's `AGENTS.md` / `CLAUDE.md` (commands, conventions; they win over this skill) and its **private notes** if it has them (a parent-folder `CLAUDE.md`, Claude project memory). Private notes stay private: never copy them into tracked files; name their paths in briefs, since worktrees do not load them. Find the project's **scale** (a `Scale` section in AGENTS.md, or in the private notes for a client repo: who uses it, how much, in production or not); none: ask Mattia in one line and propose where to save it. Settle personal or client repo (Hard rules). Then read workers.md and kinds.md. Read merge.md at the first merge.
+6. Read `~/.claude/skills/unslop/SKILL.md` in full (a user-only skill, so read the file). Everything you write to Mattia, in this chat and in tracker comments, follows it.
 
-After a compaction or a resumed summary, re-read this file, workers.md and merge.md before the next launch or merge, and keep thread ids with their `mcp:` prefix.
+After a compaction or a resumed summary, re-read this file, workers.md, merge.md and unslop before the next launch or merge, and keep thread ids with their `mcp:` prefix.
 
 ## Opening move and roll call
 
-After preflight, run `git fetch origin`, then read the open and in-progress issues, `t3_thread_list`, `git status`, `git worktree list`, unmerged branches and unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`). Show Mattia a short picture plus what looks next, and ask what he wants (or start the loop with the goal he gave). Never invent work.
-- Git beats tracker status: check tags and `git branch --merged` before calling anything ready or done.
+After preflight, read `~/.t3/handoffs/<repo name>/close-of-day.md` if it exists: the note the close-the-day skill left where the last session stopped. Then run `git fetch origin`, and read the open and in-progress issues, `t3_thread_list`, `git status`, `git worktree list`, unmerged branches and unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`). Show Mattia a short picture plus what looks next, and ask what he wants (or start the loop with the goal he gave). Never invent work.
+- Git beats tracker status and the close-of-day note: check tags and `git branch --merged` before calling anything ready or done.
 - Unpushed commits stay a standing line in every status until pushed: on some projects a push is a production deploy, and work left unpushed for days surprises everyone.
 - Another orchestrator's threads on the same repo: name them, leave them alone, keep your merges off their branches.
 - An issue key from another project: confirm in one line before acting on it.
 
-Whenever he returns or asks for status, give the **work map**, one line per task: issue, kind, blocked by, files owned, thread, state (running / idle / waiting on a request / reported), and what it is doing. Use `t3_thread_list`, `t3_thread_read` and `t3_pending_request_list` (a worker parked on a question looks idle). Say who has reported. A sub-tracer is one line (epic, state): read its thread, do not ask it.
+Whenever he returns or asks for status, give the **work map**, one line per task: issue, what it is for (a few plain words), kind, blocked by, files owned, thread, state (running / idle / waiting on a request / reported), and what it is doing. Use `t3_thread_list`, `t3_thread_read` and `t3_pending_request_list` (a worker parked on a question looks idle). Say who has reported. A sub-tracer is one line (epic, state): read its thread, do not ask it.
 
 ## Spawning order: what blocks what
 
@@ -114,5 +121,6 @@ Keep the work map up to date; it drives every spawn.
 - He dictates, so words get misheard (an issue number heard as a name). Interpret, then say your reading out loud.
 - Each step: status in about 8 lines at most, a recommendation, at most 2 numbered questions.
 - Answer his question first, before anything else, including going back to waiting.
+- **When he comes back** (from away mode, a break, or after a batch of reports), the first line says what waits on him, or that nothing does. Then one line per call he can answer by voice: the call, your pick, what it changes for him, the risk. Group calls with the same answer ("merge all three? I'd say yes; the riskiest is TRC-161") so "all yes" works. Then what happened, in a few plain lines, with no SHAs or counts unless he needs one to act. List only calls that are really his.
 - Hand checks go one step at a time: give a step, he answers, confirm it from logs or history where you can, then give the next. Long lists get lost or half-done. Batching them at the end is his call.
 - His attention for hand checks is the bottleneck, not the agents. Asked "should we spawn more?", "wait" is a fine answer.
