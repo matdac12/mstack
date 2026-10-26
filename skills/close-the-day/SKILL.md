@@ -1,6 +1,6 @@
 ---
 name: close-the-day
-description: End-of-day wrap-up for the current project. Records the day in the tracker, memory and docs, cleans up, and writes the note and paste-in prompt tomorrow starts from. Add "shutdown" to turn the PC off at the end.
+description: End-of-day wrap-up for the current project. Tidies the whole tracker project, brings CLAUDE.md, AGENTS.md and docs up to date, cleans up, and writes the note and paste-in prompt tomorrow starts from. Add "shutdown" to turn the PC off at the end.
 disable-model-invocation: true
 user-invocable: true
 argument-hint: "[shutdown]"
@@ -10,19 +10,30 @@ argument-hint: "[shutdown]"
 
 Mattia is stopping for the day. Leave the project so tomorrow's session starts from a written note, not from memory. Write everything to him following `~/.claude/skills/unslop/SKILL.md` (read it first).
 
-Inside a tracer session, tracer's rules still hold: workers do the edits, and settle and clean-up follow its merge.md. Never push or deploy here, even when work is unpushed: list it instead.
+Invoking this skill is Mattia asking you to tidy the tracker and fix the docs yourself, also inside a tracer session; there, settle and clean-up still follow tracer's merge.md. Never push or deploy here, even when work is unpushed: list it instead.
 
 ## 1. Read the state
 
 Repo root from `git rev-parse --show-toplevel`. Then `git status`, `git worktree list`, unmerged branches, unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`), and, with T3 tools, the threads this session launched (`t3_thread_list`, `t3_pending_request_list`). Done when you can say, for each piece of today's work: merged, pushed, waiting on Mattia, running, or dropped.
 
-## 2. Record
+## 2. Tidy the tracker
 
-- **Tracker** (the one this session uses; none: skip): each issue touched today has its real status and a short comment saying where it stands. Use only statuses that exist.
-- **Lessons:** a fact or lesson a later session should not have to re-learn goes to the tracker's knowledge layer (Traccia memories) or the project's agent memory. Update an existing note rather than adding a near-duplicate.
-- **Docs:** docs that today's work made wrong get fixed in one commit (in a tracer session, by a worker). A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules).
+The whole project, not only today's issues, so an agent opening it tomorrow knows exactly where the project stands. Use the tracker this session uses (none: skip). On Traccia, the project page is `get_project`: its description and its milestones with their "Rules for agents".
 
-## 3. Clean up
+- **Status from the code:** check each open issue against git. Merged into `<defaultBranch>`: Done, or In Review when a hand check is still owed (say which in a comment). Work on a branch: In Progress. Never started: Backlog or Todo. Use only statuses that exist.
+- **Descriptions:** each open issue's description matches today's reality: what is done, what is left, decisions taken. Rewrite stale ones; on Traccia pass `expectedUpdatedAt`.
+- **Structure:** related issues sit under a parent issue or a milestone; blocking edges (`blockedBy`) match the real order. Create a parent or milestone when a group of 3+ issues has none.
+- **Duplicates and dead issues:** Canceled with a comment naming the issue that replaces it, or why it was dropped. Never delete.
+- **Project page:** the project description says where the project stands (current milestone, what is next) and stays short.
+- **Lessons:** a fact a later session should not have to re-learn goes to the tracker's knowledge layer (Traccia memories) or the project's agent memory. Update an existing note rather than adding a near-duplicate.
+
+Done when every open issue has a status git agrees with, a current description, and a place in the structure.
+
+## 3. Update the docs
+
+`CLAUDE.md`, `AGENTS.md`, the README and the `docs/` folder, whichever exist. Check each claim that today's work touched against the code (commands, paths, behaviour, conventions) and fix what is wrong or missing. Keep `AGENTS.md` and `CLAUDE.md` short: rules and pointers, not history. Private facts (scale, client details, tracker notes) stay in the private notes, never in a tracked file. A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). Commit the doc changes as one commit; nothing changed: say so.
+
+## 4. Clean up
 
 - Settle the threads this session launched that are finished: merged, recorded, or dropped. Never one that is running, waiting on a request, or owns unmerged work.
 - Stop dev servers, localhost and watchers this session started, by PID or process tree, never by image name.
@@ -30,7 +41,7 @@ Repo root from `git rev-parse --show-toplevel`. Then `git status`, `git worktree
 
 Done when nothing this session started is still running, except what you leave on purpose and name in the note.
 
-## 4. Write the note
+## 5. Write the note
 
 Overwrite `~/.t3/handoffs/<repo name>/close-of-day.md` (create the folder). It sits outside the repo, so client repos stay clean, and tracer reads it at its next start.
 
@@ -50,9 +61,9 @@ Overwrite `~/.t3/handoffs/<repo name>/close-of-day.md` (create the folder). It s
 <or "nothing">
 ```
 
-## 5. Hand back
+## 6. Hand back
 
-Reply with what waits on him, then a paste-in prompt for tomorrow in a code block:
+Reply with what waits on him and a few lines on what you changed in the tracker and docs, then a paste-in prompt for tomorrow in a code block:
 
 ```
 Resume <repo>. Read ~/.t3/handoffs/<repo name>/close-of-day.md first, then check it against git before doing anything.
