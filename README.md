@@ -33,7 +33,7 @@ Agent skills for [Claude Code](https://claude.com/claude-code) and other agents 
 | Skill | What it does |
 | --- | --- |
 | [**tracer**](skills/tracer/SKILL.md) | Turns a [T3 Code](https://github.com/pingdotgg/t3code) session into an orchestrator: plans with you, spawns worker threads in their own worktrees, reviews and merges their branches, and keeps Linear or Traccia up to date. |
-| [**close-the-day**](skills/close-the-day/SKILL.md) | Wraps up the day on a project: tidies the tracker (statuses checked against the code, descriptions, sub-issues, milestones), brings CLAUDE.md, AGENTS.md and docs up to date, cleans up threads and dev servers, and writes the note and paste-in prompt the next session starts from. You invoke it yourself. |
+| [**close-the-day**](skills/close-the-day/SKILL.md) | Wraps up the day on a project: tidies the tracker (statuses checked against the code, descriptions, sub-issues, milestones), brings CLAUDE.md, AGENTS.md, docs and agent memories up to date, cleans up threads and dev servers, and writes the note and paste-in prompt the next session starts from. You invoke it yourself. |
 
 More are on the way.
 

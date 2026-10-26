@@ -1,6 +1,6 @@
 ---
 name: close-the-day
-description: End-of-day wrap-up for the current project. Tidies the whole tracker project, brings CLAUDE.md, AGENTS.md and docs up to date, cleans up, and writes the note and paste-in prompt tomorrow starts from. Add "shutdown" to turn the PC off at the end.
+description: End-of-day wrap-up for the current project. Tidies the whole tracker project, brings CLAUDE.md, AGENTS.md, docs and memories up to date, cleans up, and writes the note and paste-in prompt tomorrow starts from. Add "shutdown" to turn the PC off at the end.
 disable-model-invocation: true
 user-invocable: true
 argument-hint: "[shutdown]"
@@ -25,13 +25,14 @@ The whole project, not only today's issues, so an agent opening it tomorrow know
 - **Structure:** related issues sit under a parent issue or a milestone; blocking edges (`blockedBy`) match the real order. Create a parent or milestone when a group of 3+ issues has none.
 - **Duplicates and dead issues:** Canceled with a comment naming the issue that replaces it, or why it was dropped. Never delete.
 - **Project page:** the project description says where the project stands (current milestone, what is next) and stays short.
-- **Lessons:** a fact a later session should not have to re-learn goes to the tracker's knowledge layer (Traccia memories) or the project's agent memory. Update an existing note rather than adding a near-duplicate.
 
 Done when every open issue has a status git agrees with, a current description, and a place in the structure.
 
-## 3. Update the docs
+## 3. Update the docs and memories
 
 `CLAUDE.md`, `AGENTS.md`, the README and the `docs/` folder, whichever exist. Check each claim that today's work touched against the code (commands, paths, behaviour, conventions) and fix what is wrong or missing. Keep `AGENTS.md` and `CLAUDE.md` short: rules and pointers, not history. Private facts (scale, client details, tracker notes) stay in the private notes, never in a tracked file. A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). Commit the doc changes as one commit; nothing changed: say so.
+
+**Memories** are what agents rely on most, so a stale one does the most harm. Read every memory for this project: your own local memory (the agent memory folder and its index, such as Claude's `MEMORY.md`) and the tracker's (Traccia memories). Check each against the code and the tracker: fix what went stale, delete what is wrong, merge near-duplicates, keep the index in step. Add the lessons from today a later session should not have to re-learn, updating an existing memory rather than adding a near-duplicate. Done when every memory you kept is true today.
 
 ## 4. Clean up
 
