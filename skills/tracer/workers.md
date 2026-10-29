@@ -8,14 +8,14 @@ Only these four. Another model only when Mattia names it.
 | --- | --- | --- |
 | Claude Sonnet 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-sonnet-5-5","options":[{"id":"effort","value":"medium"}]}` | Implementation, execute-a-plan, fixes, refactors. The default. |
 | Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Design, hard refactors, anything Sonnet struggled with. |
-| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **The review model**: second-model reviews (kinds.md, Review), with `reasoningEffort` set by risk there. Otherwise short tasks only: Mattia's limits there are tight. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
+| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **The review model, and nothing else**: second-model reviews (kinds.md, Review), read-only, with `reasoningEffort` set by risk there. Never code work: Mattia's OpenAI plan is small. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
 | DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash","options":[{"id":"variant","value":"high"}]}` | Guide, tests, docs. The only OpenCode model. |
 
 Check a model's option ids in the capabilities file from preflight (`jq '.providers[]|select(.providerInstanceId=="<id>")|.models[]|select(.id=="<model>")|.options'`). Claude models take only `effort` (no `contextWindow`).
 
 **Choosing:**
 - **At his desk:** before the first spawn, propose a model per task with a one-line reason and wait for his pick. A model he names for a kind of task ("Sonnet for implementation") holds for the session: record it as a tracker comment and do not re-ask until a different kind of task comes up. A model named for one issue covers that issue only, and "like the last one" is not his choice.
-- **Away mode:** you choose, Claude only: Sonnet, Opus for hard work.
+- **Away mode:** you choose, Claude only (Sonnet, Opus for hard work), unless Mattia named models for the session.
 - **Design or Guide** threads are his: always ask.
 - `t3_thread_configure` changes a running thread's model, only when he asks.
 
@@ -37,16 +37,19 @@ A worker's turn often runs 10 to 20 minutes, often the whole task, and a `queue`
 - **Yes: `steer`.** It reaches the running turn at its next step. Corrections to the approach, a changed or clarified requirement, an answer it is waiting on or working around, a `<defaultBranch>` move near its files, a machine-lock grant or release, a stop. Anything Mattia just asked to change is urgent for the worker it touches.
 - **No: `queue`.** It belongs after the current turn: a follow-up task, a nudge to a worker already writing its report.
 - **Unsure: `steer`.** Put the timing in the words ("when your current step is committed, rebase…"); arriving early costs nothing, arriving late costs the work in between.
-- **Idle worker:** `auto` starts it.
+- Always name the mode. `auto` follows Mattia's T3 setting (queue for him), so an urgent message to a running worker says `steer`.
+- **Idle worker:** a steer fails (`thread_not_sendable`); `auto` starts a new turn, and the worker acts on whatever it reads. Send an idle worker only work you want done; no rebase notice to one with nothing unmerged.
 - `restart` only when Mattia asks.
 
 A queued message that turns urgent: find it with `t3_queue_list`, then `t3_queue_promote_to_steer`.
 
 ## Heartbeat
 
-One safety net for a worker that forgets to report or stops moving. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":1800000}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". First `list_scheduled_tasks`: if a heartbeat bound to this thread already exists (after a compaction you no longer know its id), reuse it. Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
+One safety net for a worker that forgets to report or stops moving. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":<interval>}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". The interval follows the work: 10 minutes (600000) while small tasks run, 30 (1800000) when only long ones (design, big builds, sub-tracers) are left; replace it when the mix changes. First `list_scheduled_tasks`: if a heartbeat bound to this thread already exists (after a compaction you no longer know its id), reuse it. Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
 
-At each launch, note on the work map when you expect the report (about N minutes).
+At each launch, note on the work map when you expect the report (about N minutes). Agents are fast: a clear small task often takes minutes, not half an hour.
+
+After recording any report, also run one `t3_thread_list` of your workers: one that went idle with no report gets the Idle-without-a-report step below now, not at the next heartbeat.
 
 Each run, for every worker you launched that has no recorded report:
 - **Running, within its estimate:** nothing.
@@ -63,12 +66,15 @@ Nothing to do: end the turn in one line, without messaging Mattia.
 
 Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it and `t3_pending_request_list`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to the other tracker.
 
+Env files do not come either. Copy the main checkout's untracked `.env*` files into the worktree at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`), then check each is ignored there (`git -C <worktree> check-ignore -q <path>`, else append it to `.git/info/exclude`). Never print them.
+
 ## Dependencies (first thread of a task)
 
 Installed dependencies are gitignored too, and a fresh install in every worktree repeats identical work. Project-agnostic rule: the worker reuses the main checkout's install instead of reinstalling from scratch, and does so only when it is provably the same.
 
 - **Same lockfile:** the worktree's committed lockfile (whatever the ecosystem uses) has no diff against the main checkout's (`git diff --quiet <defaultBranch> -- <lockfile>` and no uncommitted change to it in main), and main has the installed directory (`node_modules`, `vendor`, ...).
 - **Location-independent directory** (`node_modules`, `vendor`, `Pods`): copy it from main with a fast bulk copy (`MSYS_NO_PATHCONV=1 robocopy ... /E /MT:16` on Windows, `cp -a` elsewhere; never a junction or symlink, a shared directory lets one worker corrupt main and the others). Then run the project's own offline or frozen verify (`npm ls`, `composer validate`, ...) and fall back to the normal install if it fails.
+- **npm or pnpm workspaces on Windows:** robocopy follows the workspace junctions and copies main's packages in as stale folders, so tests run main's code. After the copy, always run `npm install --prefer-offline --no-audit --no-fund` (about a second: it only relinks), check the lockfile is unchanged (`git diff --quiet -- <lockfile>`), else `npm ci`. On Linux `cp -a` keeps the links relative and is enough.
 - **Location-bound directory** (Python `.venv`, `target`, anything with absolute paths baked in): do not copy. Run the normal install, with the tool's cache and offline flags (`--prefer-offline`, `uv sync`, ...), so the download is already skipped.
 - Lockfile differs, main has no install, or the ecosystem is unfamiliar: the normal install, once, with its cache flags.
 - The worker states in its report which path it took. Later threads of the task reuse the worktree and install nothing unless the lockfile changed.
@@ -76,7 +82,7 @@ Installed dependencies are gitignored too, and a fresh install in every worktree
 ## Windows / Git Bash (you and the workers)
 
 - `git -C <repo>` instead of `cd` in compound commands: a `cd` moves the session's working directory.
-- `robocopy` from Git Bash: prefix `MSYS_NO_PATHCONV=1`, or `/E` is mangled (exit 16).
+- `robocopy` from Git Bash: prefix `MSYS_NO_PATHCONV=1`, or `/E` is mangled, and pass Windows paths (`$(cygpath -w <path>)`): with `/c/...` paths it fails with exit 16, which is easy to miss.
 - PowerShell from bash: wrap the command in single quotes so bash does not expand `$env:...`; build paths with `Join-Path $env:APPDATA ...`.
 - **Wildcards:** `settings.json.*` also matches `settings.json` (a trailing `.*` matches an empty extension). That deleted a live settings file with API keys. List the exact matches before deleting, or name each file.
 - **A running app locks its exe:** a release build into the same target dir fails at the final copy ("Access denied, os error 5"), and `| tail` can hide it. Stop the app, build, restart it, check the exe timestamp.
@@ -117,7 +123,8 @@ Preview: <when one with data is running: its link and a login (never commit them
 - Before editing code, load the brief's `Skill:` and follow it; if it is unavailable, stop and report blocked.
 - If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`).
 - Add or update tests. Before reporting, run the project's full fast check (the whole unit suite, not only the tests for your files) and any e2e the change touches; report real output, failures included. Run builds and tests in the foreground: end your turn with no background job running, except a preview this brief asks you to leave up (report its PID).
-- Update README and docs for any user-visible change.
+- Update docs for any user-visible change, in files you own. README or docs owned by another task: put your doc text in the report instead.
+- Machine names, tailnet hosts and `local/<defaultBranch>` stay out of everything you commit, even when this brief or the issue names them.
 - Stay local: commit on your branch (message mentions <ISSUE-ID> in a personal repo, and always ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
 - Shared machine: stop only processes you started; take the machine lock from the orchestrator for timed runs, app swaps and GUI tests. Away mode: <on | off>.
 - Say what Mattia should check by eye if you cannot see the running app.
@@ -127,7 +134,7 @@ Preview: <when one with data is running: its link and a login (never commit them
 When done or blocked, send this with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID>, mode `queue`, as your final message:
 
 REPORT <ISSUE-ID>
-- Status: done | blocked (why)
+- Status: done | done, checks unrunnable (why) | blocked (why)
 - Branch: <branch> @ <commit SHA>; worktree clean: yes | no
 - Changed: <what, in a few lines>
 - Skill used: <name> | none (why)
