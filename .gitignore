@@ -7,6 +7,9 @@
 /musica/
 /scrivi/
 
+# Sandbox for stress-testing the tracer skill; its own repo, not a tool.
+/tracer-lab/
+
 # Local-only notes.
 /notes/
 
