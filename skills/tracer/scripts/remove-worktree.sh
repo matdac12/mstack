@@ -4,7 +4,8 @@
 #   <base-ref>: what the branch must be merged into (`main` here, `local/main`
 #   on a linked machine). Settle the thread and stop its dev servers first.
 # Over SSH: ssh <target> bash -s -- <args> < remove-worktree.sh
-# Refuses (exit 1) instead of forcing anything that could lose work.
+# New untracked .env* files in the worktree are copied into the main checkout
+# first. Refuses (exit 1) instead of forcing anything that could lose work.
 set -u
 
 repo=${1:?repo root}; wt=${2:?worktree path}; branch=${3:?branch}; base=${4:?base ref}
@@ -32,6 +33,16 @@ if [ "$registered" = 1 ]; then
   [ -z "$(git -C "$wt" status --porcelain)" ] || refuse "$wt has uncommitted changes"
   git -C "$repo" merge-base --is-ancestor "$branch" "$base" 2>/dev/null \
     || refuse "$branch is not merged into $base"
+  # Env files a worker created live only here: bring new ones back to the
+  # main checkout first. One that differs from main's copy is left for you.
+  while IFS= read -r f; do
+    [ -f "$wt/$f" ] || continue
+    if [ ! -e "$repo/$f" ]; then
+      mkdir -p "$(dirname "$repo/$f")" && cp -p "$wt/$f" "$repo/$f" && echo "copied new $f into the main checkout"
+    elif ! cmp -s "$wt/$f" "$repo/$f"; then
+      refuse "$f differs from the main checkout's copy: compare them, then rerun"
+    fi
+  done < <(git -C "$wt" ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$')
   git -C "$repo" -c core.longpaths=true worktree remove --force "$wt" 2>/dev/null \
     && echo "removed worktree $wt"
 elif [ -e "$wt/.git" ]; then

@@ -51,6 +51,7 @@ cd mstack
 ```text
 mstack/
 ├── skills/        agent skills, tracked here
+├── hooks/         Claude Code hooks shared by every machine (the destructive-command guard)
 ├── tools.json     the tool manifest setup.ps1 reads
 ├── setup.ps1
 └── parla/ traccia/ annota/ tasca/ hyperkey/ musica/ scrivi/  ← cloned by setup.ps1, each its own repo

@@ -14,7 +14,7 @@ Invoking this skill is Mattia asking you to tidy the tracker and fix the docs yo
 
 ## 1. Read the state
 
-Repo root from `git rev-parse --show-toplevel`. Then `git status`, `git worktree list`, unmerged branches, unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`), and, with T3 tools, the threads this session launched (`t3_thread_list`, `t3_pending_request_list`). Done when you can say, for each piece of today's work: merged, pushed, waiting on Mattia, running, or dropped.
+Repo root from `git rev-parse --show-toplevel`. Then `git status`, `git worktree list`, unmerged branches, unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`), and, with T3 tools, the threads this session launched (`t3_thread_list`, `t3_pending_request {"action":"list"}`). Done when you can say, for each piece of today's work: merged, pushed, waiting on Mattia, running, or dropped.
 
 ## 2. Tidy the tracker
 
@@ -24,7 +24,8 @@ The whole project, not only today's issues, so an agent opening it tomorrow know
 - **Descriptions:** each open issue's description matches today's reality: what is done, what is left, decisions taken. Rewrite stale ones; on Traccia pass `expectedUpdatedAt`.
 - **Structure:** related issues sit under a parent issue or a milestone; blocking edges (`blockedBy`) match the real order. Create a parent or milestone when a group of 3+ issues has none.
 - **Duplicates and dead issues:** Canceled with a comment naming the issue that replaces it, or why it was dropped. Never delete.
-- **Project page:** the project description says where the project stands (current milestone, what is next) and stays short.
+- **Project page:** the project description says where the project stands (current milestone, what is next) and stays short. On Traccia, update it with `save_project` and the project's `id` (tracer trackers.md); without the id it creates a new project.
+- **Machine names:** search the project's tracker text (project description, open issues, today's comments) for the names in `~/.t3/machines.md`, in any case, and rewrite each hit without them: colleagues cannot know what they mean.
 
 Done when every open issue has a status git agrees with, a current description, and a place in the structure.
 
@@ -36,7 +37,7 @@ Done when every open issue has a status git agrees with, a current description, 
 
 ## 4. Clean up
 
-- Settle the threads this session launched that are finished: merged, recorded, or dropped. Never one that is running, waiting on a request, or owns unmerged work.
+- Settle the threads this session launched that are finished: merged, recorded, or dropped, with their subagents (`t3_thread_list {"settled":false,"includeSubagents":true}`, on each linked machine with its `environmentId` and `projectId`). Never one that is running, waiting on a request, or owns unmerged work.
 - Stop dev servers, localhost and watchers this session started, by PID or process tree, never by image name.
 - Update the shared skills: `git pull --ff-only` in each clone under `~/.agents/sources/`, here and on every reachable linked machine over SSH (tracer remote.md), plus the mstack checkout there. Say in one line what moved or failed; a failed pull stays as it is, never forced.
 - Delete scratch files this session made (screenshots, throwaway prototypes, temp scripts) that are untracked and referenced by nothing. List the exact paths before deleting; anything unsure stays and goes in the note.
@@ -61,6 +62,8 @@ Overwrite `~/.t3/handoffs/<repo name>/close-of-day.md` (create the folder). It s
 1. <first thing tomorrow>
 ## Left running on purpose
 <or "nothing">
+## This session
+Orchestrator thread <id>: finished with this note. Its threads are settled, or listed above; a new session owns everything from here.
 ```
 
 ## 6. Hand back
