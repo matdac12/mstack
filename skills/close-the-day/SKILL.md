@@ -38,6 +38,7 @@ Done when every open issue has a status git agrees with, a current description, 
 
 - Settle the threads this session launched that are finished: merged, recorded, or dropped. Never one that is running, waiting on a request, or owns unmerged work.
 - Stop dev servers, localhost and watchers this session started, by PID or process tree, never by image name.
+- Update the shared skills: `git pull --ff-only` in each clone under `~/.agents/sources/`, here and on every reachable linked machine over SSH (tracer remote.md), plus the mstack checkout there. Say in one line what moved or failed; a failed pull stays as it is, never forced.
 - Delete scratch files this session made (screenshots, throwaway prototypes, temp scripts) that are untracked and referenced by nothing. List the exact paths before deleting; anything unsure stays and goes in the note.
 
 Done when nothing this session started is still running, except what you leave on purpose and name in the note.
