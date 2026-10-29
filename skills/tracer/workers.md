@@ -107,6 +107,7 @@ Skill: <the implementing skill from kinds.md, plus any domain skill; required fo
 Private project notes: <paths, if the project has them; read them first>.
 Scale: <the project's scale from its private notes; keep it out of every file you commit>
 Repo: <personal | client>
+Preview: <when one with data is running: its link and a login (never commit them). Check your change there with agent-browser, and say in your report whether you checked real or fake data.>
 
 ## Rules
 - Build the simplest thing that works at this scale: the option that changes the least code, following your skill. Handle the cases this scale really meets. If the simple version falls short, say why in your report before building more.

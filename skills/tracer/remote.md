@@ -59,15 +59,23 @@ Code and files move over SSH (`<ssh>` and `<root>`: machines.md and the project'
 
 - The dev server listens on all interfaces (`0.0.0.0`). The link is `http://<tailscale name>:<port>`; machines.md gives the name.
 - Plain http by default. Use `tailscale serve` (https) only when the app needs a secure origin (login redirects, clipboard, camera, service workers), and say so in the report.
+- A dev server that checks the Host header must allow the tailscale name: Vite `server.allowedHosts`, Next.js `allowedDevOrigins`. Use an untracked config where the tool allows one; otherwise name the one-line change in the report instead of committing it.
 - Before you hand Mattia the link, open it from here (`curl`) and confirm it answers.
-- Once Mattia has looked, the worker that started the preview stops it, `tailscale serve` included. A preview still running after that, you stop.
+- The preview lives with the worker's thread. It stops when that thread is settled, once Mattia confirms the area of work is done (merge.md, Settle); `tailscale serve` goes with it. A preview still running after that, you stop.
+
+## Live mode
+
+Only on Mattia's yes. For a session of small visual tweaks on a running preview, ask once: "quick iteration in live mode?" Otherwise the normal flow.
+- One preview, served from that machine's checkout of `<defaultBranch>`. Workers edit and commit there directly, with no branch or worktree; two run at once only on disjoint files.
+- Mattia checks live; there is no per-task merge. While it lasts, that checkout holds the newest code: sync nothing onto it.
+- At the end, fetch that `<defaultBranch>` back over SSH, verify the build here, and push on his yes.
 
 ## Never
 
 - Answer a remote permission prompt for Mattia.
 - Run a command a guard hook blocked.
 - Deploys or migrations, repo visibility or tokens.
-- Move a client repo's source of truth to that machine.
+- Move a client repo's source of truth to that machine, except for a live mode session Mattia said yes to.
 
 ## Reporting and hygiene
 

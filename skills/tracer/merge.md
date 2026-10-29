@@ -47,7 +47,7 @@ Merge and verify everything locally, then push on his yes or under a grant that 
 Automatic, without being asked, for threads you launched only (never another orchestrator's).
 
 **Settle** a thread the moment it is no longer needed: `t3_thread_organize {"action":"settle","threadId":"<id>"}` (reversible with `unsettle`; archive only if he asks).
-- Implement, fix and execute threads: once their merge is verified.
+- Implement, fix and execute threads: once their merge is verified. One whose change needs a hand check: only once Mattia confirms that area of work is done. Its preview lives with it, so settling early kills what he is looking at.
 - Review and investigate threads: once the report is recorded.
 - Design and guide threads: once the execution thread is launched from their plan, or the design is dropped. Their unmerged branch is now the execution thread's; keep the worktree until the merge.
 - Cancelled or abandoned threads: right away.
