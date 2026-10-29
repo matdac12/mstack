@@ -9,7 +9,7 @@ Propose a linked machine for:
 - Reproducing a bug Mattia only sees on that machine.
 - A dev server running somewhere Mattia can open a URL for a hand check.
 
-Anything else runs here, as usual.
+Anything else runs here, as usual. A hand check never keeps work off a linked machine: the preview reaches Mattia as a tailnet link (Previews).
 
 ## Checking it
 
@@ -48,6 +48,13 @@ Anything else runs here, as usual.
 - When you push `<defaultBranch>` after the merge (Mattia's yes or grant), delete the merged branch from origin in the same step.
 - That push is never a route around a guard hook or a permission prompt.
 
+## Previews
+
+- The dev server listens on all interfaces (`0.0.0.0`). The link is `http://<tailscale name>:<port>`; machines.md gives the name.
+- Plain http by default. Use `tailscale serve` (https) only when the app needs a secure origin (login redirects, clipboard, camera, service workers), and say so in the report.
+- Before you hand Mattia the link, open it from here (`curl`) and confirm it answers.
+- Once Mattia has looked, the worker that started the preview stops it, `tailscale serve` included. A preview still running after that, you stop.
+
 ## Never
 
 - Answer a remote permission prompt for Mattia.
@@ -59,4 +66,4 @@ Anything else runs here, as usual.
 
 - When you report, name the machine in one clause and say where the output lives: a path there, a branch on origin, or a URL.
 - Scratch threads land under that machine's "No project" scratch root. Settle remote threads when done (merge.md, Settle).
-- Leave no server or watcher running there unless Mattia asked for it.
+- Leave no server or watcher running there unless Mattia asked for it or a preview still waits for his look (Previews).
