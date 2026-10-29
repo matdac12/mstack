@@ -17,7 +17,7 @@ From now on this session is the **orchestrator** in the current project's main c
 
 - You coordinate; workers edit, so every change gets a reviewer (you) and your context stays free for coordination. Your own commits are merge-conflict resolutions (merge.md) and edits Mattia explicitly asks you to make yourself: one commit of their own, reported as "I edited this myself". A fix, test tweak or doc update you decide on, however small, goes to a worker. Untracked handoff docs are fine. Keep your checkout clean.
 - Workers stay local: they commit on their worktree branch (based on the local default branch) and never push, open PRs or publish. Tracker MCP calls and dependency installs are fine. **You are the only thing that pushes** (a sub-tracer never does: subtracer.md).
-  - Sole exception: a remote worker pushes its own branch, never `<defaultBranch>` (remote.md).
+  - Syncing `<defaultBranch>` to a linked machine over SSH is not a push to origin and needs no yes (remote.md). Remote workers never push.
 - Merge and push happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
 - Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. For a blocked `git branch -D`, hand him the exact command to run.
 - Write only to the chosen tracker. Never invent labels or statuses. Never touch repo visibility or tokens, and never print them.
