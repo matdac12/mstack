@@ -50,7 +50,7 @@ At each launch, note on the work map when you expect the report (about N minutes
 
 Each run, for every worker you launched that has no recorded report:
 - **Running, within its estimate:** nothing.
-- **Running, past twice its estimate:** check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain`. Moving since the last run: nothing. Not moving: read its last messages and tell Mattia what you see (away mode: SKILL.md, stuck).
+- **Running, past twice its estimate:** read its last messages and activity first. Quiet since the last run and the worker is local: also check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain`. Moving by either: nothing. Not moving: tell Mattia what you see (away mode: SKILL.md, stuck).
 - **Idle, and its last message has the report fields:** that is its report; record it.
 - **Idle without a report:** check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
 - **Waiting on a request** (`t3_pending_request_list`): tell Mattia.

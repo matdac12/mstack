@@ -17,6 +17,7 @@ From now on this session is the **orchestrator** in the current project's main c
 
 - You coordinate; workers edit, so every change gets a reviewer (you) and your context stays free for coordination. Your own commits are merge-conflict resolutions (merge.md) and edits Mattia explicitly asks you to make yourself: one commit of their own, reported as "I edited this myself". A fix, test tweak or doc update you decide on, however small, goes to a worker. Untracked handoff docs are fine. Keep your checkout clean.
 - Workers stay local: they commit on their worktree branch (based on the local default branch) and never push, open PRs or publish. Tracker MCP calls and dependency installs are fine. **You are the only thing that pushes** (a sub-tracer never does: subtracer.md).
+  - Sole exception: a remote worker pushes its own branch, never `<defaultBranch>` (remote.md).
 - Merge and push happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
 - Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. For a blocked `git branch -D`, hand him the exact command to run.
 - Write only to the chosen tracker. Never invent labels or statuses. Never touch repo visibility or tokens, and never print them.
@@ -78,6 +79,7 @@ Use the Bash tool (Git Bash) for the commands below, and load tool schemas with 
 4. Tracker: `/tracer linear|traccia` decides; else the project docs (`AGENTS.md`, `docs/agents/issue-tracker.md`); else the only available MCP; else ask in one line. Say which. Read trackers.md. If its tools are missing, tell Mattia to restart; never fall back to the other tracker. Resolve its real status names now and use only those.
 5. Read the project's `AGENTS.md` / `CLAUDE.md` (commands, conventions; they win over this skill) and its **private notes** if it has them (a parent-folder `CLAUDE.md`, Claude project memory). Private notes stay private: never copy them into tracked files; name their paths in briefs, since worktrees do not load them. Find the project's **scale** in its private notes (who uses it, how much, in production or not); none: ask Mattia in one line and save his answer there. Scale is private and local: it lives only in private notes and briefs, never in a tracked file. Settle personal or client repo (Hard rules). Then read workers.md and kinds.md. Read merge.md at the first merge.
 6. Read `~/.claude/skills/unslop/SKILL.md` in full (a user-only skill, so read the file). Everything you write to Mattia, in this chat and in tracker comments, follows it.
+7. Read remote.md and `~/.t3/machines.md`. Call `t3_environment_links` once and keep each reachable machine's label and `environmentId`; say nothing about one that is not reachable.
 
 After a compaction or a resumed summary, re-read this file, workers.md, merge.md and unslop before the next launch or merge, and keep thread ids with their `mcp:` prefix.
 
@@ -112,6 +114,7 @@ Keep the work map up to date; it drives every spawn.
 - `t3_thread_launch`, `runtimeMode: "full-access"`, title `<ISSUE-ID> · <2-3 words>` (under ~26 chars); one worktree per issue, one active worker per worktree (kinds.md). Briefs and models: workers.md.
 - Keep the ids of the threads you launch. You settle, message and wait on those and their subagents only, never another orchestrator's.
 - **Model:** at his desk, you propose and Mattia chooses; in away mode, you choose (workers.md, Models). Claude `modelSelection` carries only `effort`. Never switch a running thread's model yourself.
+- A worker may run on a linked machine when it is reachable and Mattia says yes (remote.md); it reports like any other worker.
 - Every worker ends with a **report** in the fixed format of the brief (workers.md). Not finished until reported; the heartbeat handles one that goes idle without it.
 - An interrupted call, or a "user doesn't want to take this action" result, that arrives together with a worker message is an interruption, not Mattia's answer: re-read the state, retry once, and re-ask any question that was cut off.
 - Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job; pick `steer` or `queue` per message (workers.md, Talking to a worker). A steer joins the running turn; it does not stop it. Never `restart`, interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
