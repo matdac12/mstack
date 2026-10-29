@@ -42,7 +42,7 @@ Code and files move over SSH (`<ssh>` and `<root>`: machines.md and the project'
 
 ## Still a worker
 
-- Same brief (workers.md, Brief), same fixed report. The brief names the machine, gives your thread id plus this machine's `environmentId` (top level of `t3_environment_links`) so the report reaches you, points to `~/.t3/private/<repo>/` for private notes, and tells the worker to copy the `.env*` files from `<root>` into its worktree first.
+- Same brief (workers.md, Brief), same fixed report. The brief names the machine, gives your thread id plus this machine's `environmentId` (top level of `t3_environment_links`) so the report reaches you, points to `~/.t3/private/<repo>/` for private notes, and tells the worker to copy the `.env*` files from `<root>` into its worktree first. If its report send fails, it posts the report as its last message with the exact error; the heartbeat picks it up, and you tell Mattia the link back to this machine needs re-linking.
 - Tracker: Claude and OpenCode workers there have Traccia and set In Progress as usual. Codex there has no tracker: its brief says no tracker calls, and you record for it.
 - One worktree per issue in that machine's checkout, branch `<issue-id>-slug` as here: `{"type":"worktree","baseRef":"local/<defaultBranch>","branch":"<branch>","startFromOrigin":false}`. It owns its files, never merges, never publishes.
 - Rebase notices: sync `local/<defaultBranch>` first (Before each launch, step 1), then tell the worker to rebase onto it.
