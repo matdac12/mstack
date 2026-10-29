@@ -45,19 +45,25 @@ Say the kind to Mattia in a word. Skills named below are assumed installed for e
 **Design.** The thread is his: he talks to the agent in the sidebar; you do not steer it and wait for its report. Ask him which model and which skill family (default superpowers):
 - **superpowers:** `superpowers:brainstorming` through the spec, then `superpowers:writing-plans`.
 - **Matt Pocock:** `grill-with-docs` or `grill-me`, then `to-spec` (and `to-tickets` if he wants tickets); `wayfinder` for something too big for one session. Tell the worker which tracker to target. `to-tickets` creates tracker issues, so only if he asks; those issues are then the tasks, and you file nothing extra.
+- **Visual design** (a page, a table, a layout): ask which route, recommending the first: a **prototype** session (`/prototype` as the first line of the launch message: throwaway prototypes he looks at and discusses), or superpowers brainstorming with visual feedback.
 
-Brief: goal and issue, skill family, where spec and plan go (project convention, else `docs/superpowers/specs/` and `plans/`), owned files, and workers.md's rules. Add: commit the spec and plan on your branch (unless the project keeps planning docs local and gitignored: follow its policy), do not implement, and **report only when Mattia has approved the plan** (a draft is not a report). Report: spec and plan (paths, or tracker references), branch and commit, task count, open decisions. Then record it, tell Mattia in two lines, and propose the execution thread; spawn on his yes. If the spec or plan splits into 3+ tickets (subtracer.md, When), propose a sub-tracer in that same message and let him choose.
+Brief: goal and issue, skill family, where spec and plan go (project convention, else `docs/superpowers/specs/` and `plans/`), owned files, and workers.md's rules. Add: commit the spec and plan on your branch (unless the project keeps planning docs local and gitignored: follow its policy), do not implement, and **report only when Mattia has approved the plan** (a draft is not a report). Report: spec and plan (paths, or tracker references), branch and commit, task count, open decisions. Then record it, tell Mattia in two lines, and propose the execution, routed by what the design produced:
+- **A superpowers plan, no tickets:** one execution thread. Always ask him native or subagent-driven (table below); never pick for him. If he wants it run in parallel, turn the plan into tickets first (`to-tickets`), then the next line applies.
+- **3+ tickets in the tracker** (`to-tickets`): propose a sub-tracer in that same message and let him choose (subtracer.md).
+
+**Away mode:** a design thread has nobody to approve its plan. It decides alone, lists each choice under "Decided alone", and reports; you park the approval (SKILL.md, Away mode) and launch nothing from that plan until he approves.
 
 **Which skill implements.** Every thread that writes code gets one, named on the brief's `Skill:` line; a brief without it does not launch. Pick it by what the worker is handed, not by how big the task is:
 
 | The worker is handed | Skill |
 | --- | --- |
-| A committed plan (superpowers design) | `superpowers:executing-plans` (native, inline) or `superpowers:subagent-driven-development` (subagents inside the thread: more checks, slower). **Mattia picks each time**; in away mode, native. |
+| A committed plan (superpowers design) | `superpowers:executing-plans` (native, inline) or `superpowers:subagent-driven-development` (subagents inside the thread: more checks, slower). **Mattia picks each time**, never you; in away mode, native. |
 | A spec and tickets, no plan (Matt Pocock design, or a spec alone) | `/implement <ticket>` (user-only: first line of the launch message). It runs `tdd` and `code-review` itself. |
 | A small, clear task with no spec or plan | `superpowers:test-driven-development` |
 | A bug | `superpowers:systematic-debugging` |
+| A visual tweak, CSS only (colors, spacing, sizes) | `frontend-design` alone; checked by a screenshot or Mattia's hand check, not a test |
 
-A domain skill (`frontend-design`) is added on top of that skill, never instead of it. Never use `implement-spec`: it runs subagents inside one session; a spec with 3+ tickets is proposed as a sub-tracer (his choice), whose workers each get `/implement`. "The spec is detailed enough" is not a reason to skip the skill.
+Otherwise a domain skill (`frontend-design`) is added on top of that skill, never instead of it. Never use `implement-spec`: it runs subagents inside one session; a spec with 3+ tickets is proposed as a sub-tracer (his choice), whose workers each get `/implement`. "The spec is detailed enough" is not a reason to skip the skill.
 
 **Execute a plan.** A fresh thread in the design thread's worktree (`existing_worktree`), once that thread is idle and the plan committed. Brief: the skill chosen above on `<repo-relative plan path>`, issue, boundaries from the plan, rules; follow the plan as written, flag deviations in the report, run the project's checks, finish with `simplify` and `code-review`. **Do not split a plan into several tasks** unless Mattia asks; then each part is its own issue and worktree branching from the design branch, in dependency order.
 

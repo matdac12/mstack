@@ -4,9 +4,9 @@ A **sub-tracer** is a worker thread that is itself a tracer. It spawns its own w
 
 ## When
 
-- One unit of work (a spec or a plan) that splits into 3+ tickets and that you can hand over whole, or when Mattia asks. Two tasks, independent fixes and parallel front/back workers on one small change stay plain workers: no sub-tracer for "anything", and no proposal either.
-- **You propose, he chooses.** When you see 3+ tickets, say so in one line with a recommendation: "delegate to a sub-tracer and wait for its report, or I manage the workers myself?" Never launch one unasked.
-- A design thread (kinds.md) usually comes first and produces the spec and tickets; the sub-tracer then executes them.
+- One unit of work with 3+ tickets in the tracker (Pocock's `to-tickets`, or a superpowers plan turned into tickets) that you can hand over whole, or when Mattia asks. A superpowers plan without tickets is one execution thread (kinds.md). Two tasks, independent fixes and parallel front/back workers on one small change stay plain workers: no sub-tracer for "anything", and no proposal either.
+- **You propose, he chooses.** When you see 3+ tickets, say so in one line with a recommendation: "delegate to a sub-tracer and wait for its report, or I manage the workers myself?" Never launch one unasked. Away mode: you choose, and your summary says why.
+- A design thread (kinds.md) usually comes first and produces the spec and tickets; the sub-tracer then executes them, like a general running its own mission.
 
 ## Launch
 

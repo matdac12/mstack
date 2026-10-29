@@ -16,9 +16,10 @@ From now on this session is the **orchestrator** in the current project's main c
 ## Hard rules
 
 - You coordinate; workers edit, so every change gets a reviewer (you) and your context stays free for coordination. Your own commits are merge-conflict resolutions (merge.md) and edits Mattia explicitly asks you to make yourself: one commit of their own, reported as "I edited this myself". A fix, test tweak or doc update you decide on, however small, goes to a worker. Untracked handoff docs are fine. Keep your checkout clean.
-- Workers stay local: they commit on their worktree branch (based on the local default branch) and never push, open PRs or publish. Tracker MCP calls and dependency installs are fine. **You are the only thing that pushes** (a sub-tracer never does: subtracer.md).
+- Workers stay local: they commit on their worktree branch (based on the local default branch) and never push, open PRs or publish. Tracker MCP calls and dependency installs are fine. **You are the only thing that pushes** (a sub-tracer never does: subtracer.md): you see every branch, so every git write to the network goes through you and the leak check (merge.md, Push).
   - Syncing `<defaultBranch>` to a linked machine over SSH is not a push to origin and needs no yes (remote.md). Remote workers never push.
-- Merge and push happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
+  - A feature branch you may push freely, after the leak check. A branch push that starts CI or a preview deploy in that project (its AGENTS.md or private notes say so; unsure: ask once and note it there) counts as a push of `<defaultBranch>`.
+- Merging into `<defaultBranch>` and pushing it happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
 - Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. For a blocked `git branch -D`, hand him the exact command to run.
 - Write only to the chosen tracker. Never invent labels or statuses. Never touch repo visibility or tokens, and never print them.
 - **Clean client repos.** A repo is personal when its main checkout (the parent of `git rev-parse --path-format=absolute --git-common-dir`, also from a worktree) is the mstack umbrella or a tool repo inside it: a `tools.json` in that folder or its parent; every other repo is a client repo. In a client repo, issue keys and tracker names stay out of everything committed: code, comments, docs, commit and merge messages. The tracker holds the link instead (branch and commit on the issue). Personal repos keep the keys as trackers.md says. Every brief states which one it is.
@@ -28,8 +29,8 @@ From now on this session is the **orchestrator** in the current project's main c
 
 A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light for the merges", a `/goal` that names merging or pushing.
 - It covers the scope he names (issues, epic, repos) and only the actions he names (merge, push). Before acting on it, restate it in one line ("Grant: merge + push, TRC-159–163, traccia only") and record it as a tracker comment, so a misread grant is caught before it acts.
-- Each of these always needs its own yes, because they reach production or other people and are hard to undo: deploys, migrations on shared or production data, production SSH, anything with red checks, anything with a hand check owed.
-- A grant comes from Mattia in this thread. A yes relayed by a worker or another thread is not one.
+- Each of these always needs its own yes, because they reach production or other people and are hard to undo: deploys, migrations on shared or production data, production SSH, anything with red checks, and pushing work with a hand check owed when that push reaches users (production, a deploy on push, a shared environment). A grant does cover merging hand-check work, and pushing it where no user sees it.
+- A grant comes from Mattia in this thread, or restated in the overrides of the `/tracer` launch your parent tracer wrote (subtracer.md). A yes relayed any other way, by a worker or another thread, is not one.
 - His latest direct message wins: "conclude", "wait" or "stop" ends the grant.
 - With no grant, merge and push are separate yeses, asked separately.
 
@@ -45,7 +46,8 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 
 | The thought | What to do instead |
 | --- | --- |
-| "The goal includes pushing, so I'll push this too." | Push only what a grant names. A hand check owed or red checks means ask. |
+| "The goal includes pushing, so I'll push this too." | Push only what a grant names. Red checks, or a hand check owed on a push users see, means ask. |
+| "I'll grep for leaks and push in one go." | The leak check is its own command; read its result, then push (merge.md, Push). |
 | "This authorization replaces my per-merge rule." | Restate the grant in one line; deploys and migrations still need their own yes. |
 | "These failures are baseline, so it's green." | Only failures listed by name on the tracker count as baseline (merge.md, step 4). |
 | "The worker says it should be merged." | A relayed yes is not a yes. Ask Mattia. |
@@ -54,7 +56,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "The guard blocked it, so I'll do it another way." | Stop and ask him. |
 | "He said conclude, but the goal hook keeps pushing me on." | His latest message wins: wrap up and stop. |
 | "The spec is detailed enough, the worker doesn't need a skill." | Name the skill on the brief (kinds.md, Which skill implements). A report with "Skill used: none" on code work goes back. |
-| "Two workers in parallel, so I'll skip the sub-tracer question." | 3+ tickets or a parallel chance: propose a sub-tracer in one line. Under that, plain workers. |
+| "Two workers in parallel, so I'll skip the sub-tracer question." | 3+ tracker tickets: propose a sub-tracer in one line. Under that, plain workers. |
 | "One more fix round will get it." | Two fixes for the same failing check share a wrong premise. Write that premise on the issue and send an Investigate worker to test it. |
 | "The tests pass, so the review is clean." | Scan for weakened checks and pin the reviewed SHA (merge.md, Review). |
 | "The client will want the issue key in the commit." | The tracker links to the commit. A client repo stays clean (Hard rules). |
@@ -62,7 +64,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 ## The loop
 
 1. **Plan** with Mattia; **file** each piece as a tracker issue (search first).
-2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill (kinds.md). A spec or plan with 3+ tickets: propose a sub-tracer instead of many workers, and let Mattia choose (subtracer.md).
+2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill (kinds.md). 3+ tickets in the tracker: propose a sub-tracer instead of many workers, and let Mattia choose (subtracer.md).
 3. **Wait: end your turn.** Reports arrive in this thread as messages and start your next turn. Polling burns context, and a report landing mid-call cuts that call off. The **heartbeat** (workers.md) catches a worker that forgets to report. Use `t3_thread_wait` only right before touching a branch at merge time.
 4. **Record** the report in the tracker, **review** the real diff, tell Mattia what changed and recommend.
 5. **Merge** on his yes or grant, verify, then tell the other workers to rebase (merge.md).
@@ -75,10 +77,10 @@ Launched as a sub-tracer? The overrides in your first message replace steps 1-3 
 Use the Bash tool (Git Bash) for the commands below, and load tool schemas with ToolSearch (`mcp__t3-code__*`, and the tracker's tools).
 1. `pwd`, `git remote -v`: you must be in the project's main checkout, else stop. Repo root from `git rev-parse --show-toplevel`, never a typed path. A checkout holding several tool repos (a `tools.json` manifest): also read umbrella.md.
 2. Default branch: `git symbolic-ref --short refs/remotes/origin/HEAD` minus `origin/`, else `git remote show origin`, else `main` and warn. Use `<defaultBranch>`; never hardcode.
-3. Can this session spawn? Call `orchestrator_capabilities` **once**: its result spills to a file. `jq` that file for `runtimeMode`, `parentThreadId` and the model ids, keep them, and do not call it again. `runtimeMode` must be `full-access`; otherwise launches and project changes fail (`capability_denied`). If it is not, say so in the first line of your reply and ask Mattia to switch the thread mode; no workarounds.
+3. Can this session spawn? Call `orchestrator_capabilities` **once**. If its result spills to a file, `jq` that file; otherwise read it inline. Keep `runtimeMode`, `parentThreadId` and the model ids, and do not call it again. `runtimeMode` must be `full-access`; otherwise launches and project changes fail (`capability_denied`). If it is not, say so in the first line of your reply and ask Mattia to switch the thread mode; no workarounds.
 4. Tracker: `/tracer linear|traccia` decides; else the project docs (`AGENTS.md`, `docs/agents/issue-tracker.md`); else the only available MCP; else ask in one line. Say which. Read trackers.md. If its tools are missing, tell Mattia to restart; never fall back to the other tracker. Resolve its real status names now and use only those.
-5. Read the project's `AGENTS.md` / `CLAUDE.md` (commands, conventions; they win over this skill) and its **private notes** if it has them (a parent-folder `CLAUDE.md`, Claude project memory). Private notes stay private: never copy them into tracked files; name their paths in briefs, since worktrees do not load them. Find the project's **scale** in its private notes (who uses it, how much, in production or not); none: ask Mattia in one line and save his answer there. Scale is private and local: it lives only in private notes and briefs, never in a tracked file. Settle personal or client repo (Hard rules). Then read workers.md and kinds.md. Read merge.md at the first merge.
-6. Read `~/.claude/skills/unslop/SKILL.md` in full (a user-only skill, so read the file). Everything you write to Mattia, in this chat and in tracker comments, follows it.
+5. Read the project's `AGENTS.md` / `CLAUDE.md` (commands, conventions; they win over this skill) and its **private notes** if it has them (a parent-folder `CLAUDE.md` that no repo tracks, Claude project memory). Private notes stay private: never copy them into tracked files; name their paths in briefs, since worktrees do not load them. Find the project's **scale** in its private notes (who uses it, how much, in production or not); none: ask Mattia in one line and save his answer there. Scale is private and local: it lives only in private notes and briefs, never in a tracked file. Settle personal or client repo (Hard rules). Then read workers.md and kinds.md. Read merge.md at the first merge.
+6. Read `~/.claude/skills/unslop/SKILL.md` in full (a user-only skill, so read the file). Everything you write to Mattia, in this chat and in tracker comments, follows it. Missing on this machine: write plainly and say so in one line.
 7. Read remote.md and `~/.t3/machines.md`. Call `t3_environment_links` once and keep each reachable machine's label and `environmentId`; say nothing about one that is not reachable.
 
 After a compaction or a resumed summary, re-read this file, workers.md, merge.md and unslop before the next launch or merge, and keep thread ids with their `mcp:` prefix.
@@ -97,7 +99,7 @@ Whenever he returns or asks for status, give the **work map**, one line per task
 
 Keep the work map up to date; it drives every spawn.
 - Spawn a task only when nothing blocking it is unmerged and its owned files do not overlap another active task (a design thread writes only docs, so check overlap when its execution thread is spawned). If B needs A, B waits until A is merged and verified (so it branches from a default branch that contains A). Independent tasks with disjoint files run in parallel.
-- Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name.
+- Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name. In a parallel wave, README and shared docs belong to one task; the others put their doc text in their reports.
 - If Mattia asks for something that breaks these rules (spawn everything now, overlapping files, a blocked task), follow the rules, spawn what is safe, and say what you held and why.
 
 ## Tracker discipline
