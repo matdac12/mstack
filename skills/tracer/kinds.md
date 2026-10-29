@@ -51,7 +51,7 @@ Brief: goal and issue, skill family, where spec and plan go (project convention,
 - **A superpowers plan, no tickets:** one execution thread. Always ask him native or subagent-driven (table below); never pick for him. If he wants it run in parallel, turn the plan into tickets first (`to-tickets`), then the next line applies.
 - **3+ tickets in the tracker** (`to-tickets`): propose a sub-tracer in that same message and let him choose (subtracer.md).
 
-**Away mode:** a design thread has nobody to approve its plan. It decides alone, lists each choice under "Decided alone", and reports; you park the approval (SKILL.md, Away mode) and launch nothing from that plan until he approves.
+**Away mode:** no design thread starts. Design decisions are Mattia's alone, so a task that needs one is parked (SKILL.md, Away mode) until he is back.
 
 **Which skill implements.** Every thread that writes code gets one, named on the brief's `Skill:` line; a brief without it does not launch. Pick it by what the worker is handed, not by how big the task is:
 
