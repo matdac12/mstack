@@ -24,7 +24,7 @@ Owns: <files>. Do NOT touch: <files, and who owns them>.
 Checklist with the commands to verify.
 ## Out of scope
 ## Reporting
-<the Rules and Report back blocks from workers.md, filled in, with the orchestrator thread id>
+<the line: read ~/.claude/skills/tracer/worker-rules.md first and follow it; report to thread <ORCHESTRATOR_THREAD_ID> (and its environmentId on a linked machine)>
 ## Skill
 <the implementing skill from kinds.md, plus any domain skill; required when the task writes code>
 ```

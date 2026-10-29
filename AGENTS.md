@@ -6,6 +6,7 @@ The umbrella repo for Mattia's agentic toolbox for Windows. Public.
 
 - `parla/ traccia/ tasca/ annota/ hyperkey/ musica/ scrivi/` are **separate git repos**, gitignored here. Work on a tool inside its own folder; its commits and pushes go to its own repo. Never `git add` them here or turn them into submodules.
 - `skills/<name>/` holds agent skills. This is their real home: `~/.claude/skills/<name>` and `~/.agents/skills/<name>` are junctions into it, so edits here are live.
+- `hooks/guard-destructive.js` is the Claude Code guard hook. Each machine's `~/.claude/settings.json` runs it from its mstack checkout (PreToolUse, Bash), so a pull updates it everywhere. It is a safety boundary: change it only when Mattia asks.
 - `tools.json` is the tool manifest; `setup.ps1` reads it. Adding a tool means a `tools.json` entry, a `.gitignore` line, and a row in `README.md`.
 - `notes/` is local-only and gitignored.
 

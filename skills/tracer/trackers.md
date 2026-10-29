@@ -19,7 +19,8 @@ Tools: the `traccia` MCP. Run `whoami` first (expect actor `agent`). Default pro
 - Triage with Mattia: for each `needs-triage` issue give a recommendation (do, backlog with what would promote it, drop), apply his answer with a short decision comment, remove `needs-triage`.
 - Linear identifiers (`MAT-nnn`) from the old archive are findable by searching Traccia for that text. Look one up before telling anyone its TRC number; never assume a mapping.
 - A milestone's description (its "Rules for agents") comes from `get_project` on the project, which returns every milestone with its full text. `list_milestones` does not return it. Read it before briefing a worker on that milestone, and point the brief at it (workers do the same through `get_project`).
-- Branch naming: `trc-NNN-slug`. Commit messages mention `TRC-NNN` (personal repos only; client repos: SKILL.md, Hard rules).
+- Branch naming: `trc-NNN-slug` in personal repos. Commit messages mention `TRC-NNN` (personal repos only). Client repos name the branch by the change (`euro-format`), with no key, and the issue records the branch (SKILL.md, Hard rules).
+- Project description: `save_project` with the project's `id` (from `get_project`). Without `id` it creates a new project, even when you pass the key.
 
 ## Linear
 
@@ -29,5 +30,5 @@ Tools: the `linear` MCP (`mcp__linear__*`; load schemas with ToolSearch first).
 - Statuses come from `list_issue_statuses` for the team; use only names that exist (map In Progress / In Review / Done / blocked onto them; no "blocked" status means comment plus an existing label).
 - Labels via `list_issue_labels`; do not create one without Mattia's say-so.
 - Comments with `save_comment` (short decision notes, branch and commit). Put the issue id in the branch name.
-- Branch naming: `<id>-<2-3 words>`, lowercase (`mat-1777-contact-sync`), not Linear's long `gitBranchName`. Commit messages mention `<ID>` (personal repos only; client repos: SKILL.md, Hard rules).
+- Branch naming: `<id>-<2-3 words>`, lowercase (`mat-1777-contact-sync`), not Linear's long `gitBranchName`, in personal repos. Commit messages mention `<ID>` (personal repos only). Client repos name the branch by the change, with no key (SKILL.md, Hard rules).
 - Follow the repo's `AGENTS.md` if it adds Linear conventions (it wins).

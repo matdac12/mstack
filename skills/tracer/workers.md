@@ -41,7 +41,9 @@ A worker's turn often runs 10 to 20 minutes, often the whole task, and a `queue`
 - **Idle worker:** a steer fails (`thread_not_sendable`); `auto` starts a new turn, and the worker acts on whatever it reads. Send an idle worker only work you want done; no rebase notice to one with nothing unmerged.
 - `restart` only when Mattia asks.
 
-A queued message that turns urgent: find it with `t3_queue_list`, then `t3_queue_promote_to_steer`.
+A queued message that turns urgent: find it with `t3_queue {"action":"list","threadId":"<worker>"}`, then `t3_queue {"action":"promote_to_steer",...}`.
+
+**Your own queue.** Reports that arrive while your turn runs wait in your queue and each starts a turn later. If you read and handle one early (`t3_queue {"action":"read"}` on your own thread), cancel it (`t3_queue {"action":"cancel"}`), or it re-delivers work you already did.
 
 ## Heartbeat
 
@@ -56,7 +58,7 @@ Each run, for every worker you launched that has no recorded report:
 - **Running, past twice its estimate:** read its last messages and activity first. Quiet since the last run: also check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain` (over SSH for a remote worker, remote.md). Moving by either: nothing. Not moving: tell Mattia what you see (away mode: SKILL.md, stuck).
 - **Idle, and its last message has the report fields:** that is its report; record it.
 - **Idle without a report:** check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
-- **Waiting on a request** (`t3_pending_request_list`): tell Mattia.
+- **Waiting on a request** (`t3_pending_request {"action":"list"}`): tell Mattia. That list does not show permission prompts: a running worker with no new activity item for 10 minutes gets its `activity` view read; a prompt there is his to answer.
 
 Nothing to do: end the turn in one line, without messaging Mattia.
 
@@ -64,7 +66,7 @@ Nothing to do: end the turn in one line, without messaging Mattia.
 
 ## Worktree seeding (first thread of a task)
 
-Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it and `t3_pending_request_list`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to the other tracker.
+Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to the other tracker.
 
 Env files do not come either. Copy the main checkout's untracked `.env*` files into the worktree at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`), then check each is ignored there (`git -C <worktree> check-ignore -q <path>`, else append it to `.git/info/exclude`). Never print them.
 
@@ -77,6 +79,7 @@ Installed dependencies are gitignored too, and a fresh install in every worktree
 - **npm or pnpm workspaces on Windows:** robocopy follows the workspace junctions and copies main's packages in as stale folders, so tests run main's code. After the copy, always run `npm install --prefer-offline --no-audit --no-fund` (about a second: it only relinks), check the lockfile is unchanged (`git diff --quiet -- <lockfile>`), else `npm ci`. On Linux `cp -a` keeps the links relative and is enough.
 - **Location-bound directory** (Python `.venv`, `target`, anything with absolute paths baked in): do not copy. Run the normal install, with the tool's cache and offline flags (`--prefer-offline`, `uv sync`, ...), so the download is already skipped.
 - Lockfile differs, main has no install, or the ecosystem is unfamiliar: the normal install, once, with its cache flags.
+- An install that only rewrites lockfile metadata (`libc` fields, peer flags; different npm versions do this) is not a change: restore the lockfile. Keep Node and npm the same on every machine (machines.md).
 - The worker states in its report which path it took. Later threads of the task reuse the worktree and install nothing unless the lockfile changed.
 
 ## Windows / Git Bash (you and the workers)
@@ -100,50 +103,20 @@ Workers share Mattia's laptop, often while he is using it.
 
 ## Brief
 
-Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer; the Rules and Report back blocks go in either way. A user-only skill (kinds.md) goes as the first line of the launch message, before the brief or the pointer.
+Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer. The fixed rules and the report format live in `worker-rules.md`, which every worker reads; never paste them, and never put shell syntax (`$(...)`) in a launch message: tool parameters are not a shell. A user-only skill (kinds.md) goes as the first line of the launch message, before the brief or the pointer.
 
 ```
-Do <ISSUE-ID> in the <project> repo (this worktree, branch `<issue-id>-slug`, based on the local <defaultBranch>).
+Do <ISSUE-ID> in the <project> repo (this worktree, branch `<branch>`, based on the local <defaultBranch>).
+
+Read ~/.claude/skills/tracer/worker-rules.md first and follow it (sections: Every worker, plus Code work or Design, prototype and docs). Your report goes to thread <ORCHESTRATOR_THREAD_ID><, environmentId <ID>, on a linked machine>.
 
 ## The issue
 <title, expected result, constraints>
 Mattia's words: "<verbatim, when the issue comes from his feedback or a hand check>"
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
 Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
+Repo: <personal | client>. Tracker: <Linear | Traccia | none>. Away mode: <on | off>.
 Private project notes: <paths, if the project has them; read them first>.
 Scale: <the project's scale from its private notes; keep it out of every file you commit>
-Repo: <personal | client>
-Preview: <when one with data is running: its link and a login (never commit them). Check your change there with agent-browser, and say in your report whether you checked real or fake data.>
-
-## Rules
-- Build the simplest thing that works at this scale: the option that changes the least code, following your skill. Handle the cases this scale really meets. If the simple version falls short, say why in your report before building more.
-- Client repo: everything you commit (code, comments, docs, commit messages) carries no issue keys and no tracker names; describe the change itself. The orchestrator links your commit on the tracker.
-- Read AGENTS.md / CLAUDE.md first. Issues live in <Linear|Traccia> (Traccia: call whoami first); do not write to the other tracker. Set <ISSUE-ID> In Progress when you start, with a short comment; the orchestrator sets every later status.
-- First thing, install dependencies as in "Dependencies" above (reuse main's install when the lockfile is identical; do not run a full fresh install by reflex).
-- Before editing code, load the brief's `Skill:` and follow it; if it is unavailable, stop and report blocked.
-- If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`).
-- Add or update tests. Before reporting, run the project's full fast check (the whole unit suite, not only the tests for your files) and any e2e the change touches; report real output, failures included. Run builds and tests in the foreground: end your turn with no background job running, except a preview this brief asks you to leave up (report its PID).
-- Update docs for any user-visible change, in files you own. README or docs owned by another task: put your doc text in the report instead.
-- Machine names, tailnet hosts and `local/<defaultBranch>` stay out of everything you commit, even when this brief or the issue names them.
-- Stay local: commit on your branch (message mentions <ISSUE-ID> in a personal repo, and always ends `Co-Authored-By: <model> <email>`), leave the worktree clean, do not push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step, rerun checks and report; if the rebase conflicts, abort it and report. No tracker MCP or skill available? Say so in your report.
-- Shared machine: stop only processes you started; take the machine lock from the orchestrator for timed runs, app swaps and GUI tests. Away mode: <on | off>.
-- Say what Mattia should check by eye if you cannot see the running app.
-- On Windows, never delete with a wildcard before listing its exact matches.
-
-## Report back (mandatory, your last act)
-When done or blocked, send this with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID>, mode `queue`, as your final message:
-
-REPORT <ISSUE-ID>
-- Status: done | done, checks unrunnable (why) | blocked (why)
-- Branch: <branch> @ <commit SHA>; worktree clean: yes | no
-- Changed: <what, in a few lines>
-- Skill used: <name> | none (why)
-- Checks: <command> → <exit code>; failures named
-- Red first (fix or test-first work): <test> failed with <message> before the change | why not
-- Dependencies: <which install path you took>
-- Hand check for Mattia: <numbered steps, or "none">
-- Decided alone (he may veto): <list or "none">
-- Not verified: <list or "none">
-- Findings not fixed: <file, why, size>
-- For Mattia to decide: <list or "none">
+Preview: <when one with data is running: its link and a login (never commit them)>
 ```
