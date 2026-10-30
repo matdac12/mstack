@@ -4,7 +4,7 @@ You are a worker thread launched by the tracer (the orchestrator). Your brief gi
 
 ## Every worker
 
-- Read AGENTS.md / CLAUDE.md first. Issues live in the brief's tracker (Traccia: call `whoami` first); never write to another tracker. Set your issue In Progress when you start, with a short comment; the orchestrator sets every later status. No tracker tools available? Say so in your report and make no tracker calls.
+- Read AGENTS.md / CLAUDE.md first. Issues live in the brief's tracker (Traccia: call `whoami` first); never write to any other tracker. Set your issue In Progress when you start, with a short comment; the orchestrator sets every later status. No tracker tools available? Say so in your report and make no tracker calls.
 - Client repo: everything you commit (code, comments, docs, commit and branch messages) carries no issue keys and no tracker names; describe the change itself. The orchestrator links your commit on the tracker.
 - Machine names, tailnet hosts and `local/<defaultBranch>` stay out of everything you commit, even when the brief or the issue names them.
 - If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`). Rewording plain text that tripped it (a note, a doc, a commit message) is fine; write files with your file tools.

@@ -67,7 +67,7 @@ Nothing to do: end the turn in one line, without messaging Mattia.
 
 ## Worktree seeding (first thread of a task)
 
-Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to the other tracker.
+Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to another tracker.
 
 Env files do not come either. Copy the main checkout's untracked `.env*` files into the worktree at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`), then check each is ignored there (`git -C <worktree> check-ignore -q <path>`, else append it to `.git/info/exclude`). Never print them.
 
@@ -116,7 +116,7 @@ Read ~/.claude/skills/tracer/worker-rules.md first and follow it (sections: Ever
 Mattia's words: "<verbatim, when the issue comes from his feedback or a hand check>"
 Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
 Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
-Repo: <personal | client>. Tracker: <Linear | Traccia | none>. Away mode: <on | off>.
+Repo: <personal | client>. Tracker: <Traccia | none>. Away mode: <on | off>.
 Private project notes: <paths, if the project has them; read them first>.
 Scale: <the project's scale from its private notes; keep it out of every file you commit>
 Preview: <when one with data is running: its link and a login (never commit them)>
