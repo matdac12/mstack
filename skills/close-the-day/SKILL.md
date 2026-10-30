@@ -31,7 +31,9 @@ Done when every open issue has a status git agrees with, a current description, 
 
 ## 3. Update the docs and memories
 
-`CLAUDE.md`, `AGENTS.md`, the README and the `docs/` folder, whichever exist. Check each claim that today's work touched against the code (commands, paths, behaviour, conventions) and fix what is wrong or missing. Keep `AGENTS.md` and `CLAUDE.md` short: rules and pointers, not history. Private facts (scale, client details, tracker notes) stay in the private notes, never in a tracked file. A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). Commit the doc changes as one commit; nothing changed: say so.
+`CLAUDE.md` and `AGENTS.md`, whichever exist, are what every agent reads first, so go over every line, not only what today touched. Check each claim against the code (commands, paths, behaviour, conventions): fix it or delete it. Then cut what an agent does not need before it starts work: history, what the code or README already says, detail that belongs in `docs/`. What stays is rules and pointers. Done when every line is true today and earns its place.
+
+The README and the `docs/` folder: check each claim that today's work touched against the code and fix what is wrong or missing. Private facts (scale, client details, tracker notes) stay in the private notes, never in a tracked file. A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). Commit the doc changes as one commit; nothing changed: say so.
 
 **Memories** are what agents rely on most, so a stale one does the most harm. Read every memory for this project: your own local memory (the agent memory folder and its index, such as Claude's `MEMORY.md`) and the tracker's (Traccia memories). Check each against the code and the tracker: fix what went stale, delete what is wrong, merge near-duplicates, keep the index in step. Add the lessons from today a later session should not have to re-learn, updating an existing memory rather than adding a near-duplicate. Done when every memory you kept is true today.
 
