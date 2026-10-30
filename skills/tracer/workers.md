@@ -2,7 +2,7 @@
 
 ## Models
 
-Only these four. Another model only when Mattia names it.
+Only these five. Another model only when Mattia names it.
 
 | Worker | `modelSelection` | Use for |
 | --- | --- | --- |
@@ -10,6 +10,7 @@ Only these four. Another model only when Mattia names it.
 | Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Design, hard refactors, anything Sonnet struggled with. |
 | GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **The review model, and nothing else**: second-model reviews (kinds.md, Review), read-only, with `reasoningEffort` set by risk there. Never code work: Mattia's OpenAI plan is small. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
 | DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash","options":[{"id":"variant","value":"high"}]}` | Guide, tests, docs. The only OpenCode model. |
+| Grok 4.7 | `{"instanceId":"grok","provider":"grok","model":"grok-4.7","options":[{"id":"reasoningEffort","value":"<effort>"}]}` | Any task, only when Mattia picks it. Offer it in your proposal; when he picks it, ask the effort (`low`, `medium`, `high`, `xhigh`) unless he gave one. Always the `grok` instance (xAI), never Grok through `cursor`. The only Grok model. |
 
 Check a model's option ids in the capabilities file from preflight (`jq '.providers[]|select(.providerInstanceId=="<id>")|.models[]|select(.id=="<model>")|.options'`). Claude models take only `effort` (no `contextWindow`).
 

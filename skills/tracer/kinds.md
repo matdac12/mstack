@@ -28,7 +28,7 @@ A task = one issue = one branch = **one worktree**. Its threads (design, then ex
 
 ## 3. Kinds
 
-Say the kind to Mattia in a word. Skills named below are assumed installed for every worker model (Mattia keeps Claude, OpenCode and Codex stocked); if a worker reports one missing, tell him.
+Say the kind to Mattia in a word. Skills named below are assumed installed for every worker model (Mattia keeps Claude, OpenCode and Codex stocked; Grok reads `~/.claude/skills`); if a worker reports one missing, tell him.
 
 **User-only skills** (marked `disable-model-invocation`, such as `implement`) cannot be started by the worker itself. Put the slash command as the first line of the launch message (`/implement TRC-42`), then the brief or the handoff pointer.
 
