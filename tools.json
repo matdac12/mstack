@@ -15,7 +15,7 @@
     {
       "name": "tasca",
       "repo": "https://github.com/matdac12/tasca",
-      "summary": "A file shelf that slides out of the screen edge: park files, drag them out later.",
+      "summary": "A file shelf at the screen edge plus a clipboard history: park files, paste past copies with Alt+V.",
       "stack": "Rust (Win32)"
     },
     {
