@@ -42,46 +42,40 @@ A worker's turn often runs 10 to 20 minutes, often the whole task, and a `queue`
 - **Idle worker:** a steer fails (`thread_not_sendable`); `auto` starts a new turn, and the worker acts on whatever it reads. Send an idle worker only work you want done; no rebase notice to one with nothing unmerged.
 - `restart` only when Mattia asks.
 
-A queued message that turns urgent: find it with `t3_queue {"action":"list","threadId":"<worker>"}`, then `t3_queue {"action":"promote_to_steer",...}`.
-
-**Your own queue.** Reports that arrive while your turn runs wait in your queue and each starts a turn later. If you read and handle one early (`t3_queue {"action":"read"}` on your own thread), cancel it (`t3_queue {"action":"cancel"}`), or it re-delivers work you already did.
+A queued message that turns urgent: find it with `t3_queue {"action":"list","threadId":"<worker>"}`, then `t3_queue {"action":"promote_to_steer",...}`. Reports queued on your own thread: SKILL.md, The loop, step 3.
 
 ## Heartbeat
 
-One safety net for a worker that forgets to report or stops moving. With the first worker launched, create a single `schedule_task`: `schedule {"type":"interval","everyMs":<interval>}`, bound to this thread (the default), prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". The interval follows the work: 10 minutes (600000) while small tasks run, 30 (1800000) when only long ones (design, big builds, sub-tracers) are left; replace it when the mix changes. First `list_scheduled_tasks`: if a heartbeat bound to this thread already exists (after a compaction you no longer know its id), reuse it. Keep its id. Delete it (`delete_scheduled_task`) when no worker is active, and create it again with the next launch. One heartbeat, never one per worker, and no `sleep` timers: per-worker timers keep firing after the work is done.
+One scheduled check, owned by this thread, for a worker that forgets to report or stops moving. A worker **needs watching** when it has no recorded report and is not waiting on Mattia (a hand check, a decision).
+- **Exists only while a worker needs watching.** At such a launch, `list_scheduled_tasks` first: reuse the heartbeat bound to this thread (after a compaction you no longer know its id). None: one `schedule_task`, bound to this thread (the default), `schedule {"type":"interval","everyMs":<interval>}`, prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". Choose the interval once, at creation: 600000 (10 minutes) when every watched task is small, 1800000 (30) when design, a big build or a sub-tracer is among them. It stays fixed until the heartbeat is deleted. Keep its id.
+- **Deleted** (`delete_scheduled_task`) as soon as no worker needs watching (check at each run and after each recorded report); the next launch that needs one creates it again.
+- Heartbeats bound to another orchestrator's thread are theirs: you reuse and delete only your own. One heartbeat for all your workers, and no `sleep` timers.
 
-At each launch, note on the work map when you expect the report (about N minutes). Agents are fast: a clear small task often takes minutes, not half an hour.
+At each launch, note on the work map when you expect the report (about N minutes). Agents are fast: a clear small task often takes minutes, not half an hour. After recording any report, run one `t3_thread_list` of your workers: one that went idle with no report gets the Idle-without-a-report step below now.
 
-After recording any report, also run one `t3_thread_list` of your workers: one that went idle with no report gets the Idle-without-a-report step below now, not at the next heartbeat.
-
-Each run, for every worker you launched that has no recorded report:
-- **Running, within its estimate:** nothing.
-- **Running, past twice its estimate:** read its last messages and activity first. Quiet since the last run: also check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain` (over SSH for a remote worker, remote.md). Moving by either: nothing. Not moving: tell Mattia what you see (away mode: SKILL.md, stuck).
-- **Idle, and its last message has the report fields:** that is its report; record it.
-- **Idle without a report:** check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
-- **Waiting on a request** (`t3_pending_request {"action":"list"}`): tell Mattia. That list does not show permission prompts: a running worker with no new activity item for 10 minutes gets its `activity` view read; a prompt there is his to answer.
-
-Nothing to do: end the turn in one line, without messaging Mattia.
+Each run:
+1. **Clock first.** Compare the time now with the previous heartbeat run in this thread. A gap more than twice the interval means the host slept: tell Mattia how long it was out, and judge each worker by what it did since it woke, not by the gap.
+2. For every worker that needs watching:
+   - **Running, within its estimate:** nothing.
+   - **Running, past twice its estimate:** read its last messages and activity first. Quiet since the last run: also check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain` (over SSH for a remote worker, remote.md). Moving by either: nothing. Not moving: tell Mattia what you see (away mode: SKILL.md, stuck).
+   - **Idle, and its last message has the report fields:** that is its report; record it.
+   - **Idle without a report:** take it in hand on this run. Check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
+   - **Waiting on a request** (`t3_pending_request {"action":"list"}`): tell Mattia. That list does not show permission prompts: a running worker with no new activity item for 10 minutes gets its `activity` view read; a prompt there is his to answer.
+3. Nothing to do: end the turn in one line, without messaging Mattia.
 
 **A worker that died or failed** gets a fresh thread in the same worktree, picked by cause: context limit → a smaller scope (split the task, or a handoff of what is done); tool or provider error → another model; unknown → the same brief once. At his desk, propose the relaunch to Mattia; in away mode, do it. Two failed relaunches: stop, tell him, and replan the task.
 
 ## Worktree seeding (first thread of a task)
 
-Gitignored files do not come with a worktree. If the project has a `.mcp.json`, copy `<repo root>/.claude/settings.local.json` into the worktree's `.claude/` (`mkdir -p` first; a failing `cp` is a stop-and-report), or write `{"enableAllProjectMcpServers": true}` if the source is missing; otherwise the worker stalls on "New MCP servers found". A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to another tracker.
-
-Env files do not come either. Copy the main checkout's untracked `.env*` files into the worktree at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`), then check each is ignored there (`git -C <worktree> check-ignore -q <path>`, else append it to `.git/info/exclude`). Never print them.
+Gitignored files do not come with a worktree. Right after the launch that creates it, run `bash ~/.claude/skills/tracer/scripts/seed-worktree.sh <worktree path>` (path from `t3_worktree_list`). It waits for the worktree, then brings the MCP approval (without it the worker stalls on "New MCP servers found"), the untracked `.env*` files (made ignored there, never printed) and the installed dependencies (Dependencies, below), and writes what it did to the worktree's git dir as `tracer-seed`, which the worker reads. A non-zero exit: tell Mattia its message. A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to another tracker.
 
 ## Dependencies (first thread of a task)
 
-Installed dependencies are gitignored too, and a fresh install in every worktree repeats identical work. Project-agnostic rule: the worker reuses the main checkout's install instead of reinstalling from scratch, and does so only when it is provably the same.
-
-- **Same lockfile:** the worktree's committed lockfile (whatever the ecosystem uses) has no diff against the main checkout's (`git diff --quiet <defaultBranch> -- <lockfile>` and no uncommitted change to it in main), and main has the installed directory (`node_modules`, `vendor`, ...).
-- **Location-independent directory** (`node_modules`, `vendor`, `Pods`): copy it from main with a fast bulk copy (`MSYS_NO_PATHCONV=1 robocopy ... /E /MT:16` on Windows, `cp -a` elsewhere; never a junction or symlink, a shared directory lets one worker corrupt main and the others). Then run the project's own offline or frozen verify (`npm ls`, `composer validate`, ...) and fall back to the normal install if it fails.
-- **npm or pnpm workspaces on Windows:** robocopy follows the workspace junctions and copies main's packages in as stale folders, so tests run main's code. After the copy, always run `npm install --prefer-offline --no-audit --no-fund` (about a second: it only relinks), check the lockfile is unchanged (`git diff --quiet -- <lockfile>`), else `npm ci`. On Linux `cp -a` keeps the links relative and is enough.
-- **Location-bound directory** (Python `.venv`, `target`, anything with absolute paths baked in): do not copy. Run the normal install, with the tool's cache and offline flags (`--prefer-offline`, `uv sync`, ...), so the download is already skipped.
-- Lockfile differs, main has no install, or the ecosystem is unfamiliar: the normal install, once, with its cache flags.
+A fresh install in every worktree repeats identical work, so the main checkout's install is reused when it is provably the same. The seed script applies this; the worker installs whatever its `tracer-seed` note leaves to it.
+- **Same lockfile** (byte-identical to the main checkout's, and main has the installed directory): a location-independent directory (`node_modules`, `vendor`) is bulk-copied (`robocopy /E /MT:16` on Windows, `cp -a` elsewhere; never a junction or symlink, a shared directory lets one worker corrupt main and the others), then the project's offline verify runs. A failed verify removes the copy. The verify is the ecosystem's own (`npm ls`; on Windows `npm install --prefer-offline --no-audit --no-fund`, which relinks workspace junctions robocopy copied as stale folders) unless the repo's git config sets `tracer.depsVerify`, set from the project's private notes.
+- **Location-bound directory** (Python `.venv`, `target`, anything with absolute paths baked in), a different lockfile, no install in main, or an unfamiliar ecosystem: the worker runs the normal install once, with the tool's cache and offline flags (`--prefer-offline`, `uv sync`, ...).
 - An install that only rewrites lockfile metadata (`libc` fields, peer flags; different npm versions do this) is not a change: restore the lockfile. Keep Node and npm the same on every machine (machines.md).
-- The worker states in its report which path it took. Later threads of the task reuse the worktree and install nothing unless the lockfile changed.
+- Later threads of the task reuse the worktree and install nothing unless the lockfile changed.
 
 ## Windows / Git Bash (you and the workers)
 
@@ -104,17 +98,20 @@ Workers share Mattia's laptop, often while he is using it.
 
 ## Brief
 
+A worker that needs a remote host (a server, a database, a test device): check the host is reachable before the launch, as the project's private notes say which host and how; unreachable means tell Mattia instead of launching.
+
 Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer. The fixed rules and the report format live in `worker-rules.md`, which every worker reads; never paste them, and never put shell syntax (`$(...)`) in a launch message: tool parameters are not a shell. A user-only skill (kinds.md) goes as the first line of the launch message, before the brief or the pointer.
 
 ```
 Do <ISSUE-ID> in the <project> repo (this worktree, branch `<branch>`, based on the local <defaultBranch>).
 
-Read ~/.claude/skills/tracer/worker-rules.md first and follow it (sections: Every worker, plus Code work or Design, prototype and docs). Your report goes to thread <ORCHESTRATOR_THREAD_ID><, environmentId <ID>, on a linked machine>.
+First step: load your tracker's tools (Traccia: then `whoami`); missing means say so in your report. Then read ~/.claude/skills/tracer/worker-rules.md and follow it (sections: Every worker, plus Code work or Design, prototype and docs). Your report goes to thread <ORCHESTRATOR_THREAD_ID><, environmentId <ID>, on a linked machine>.
 
 ## The issue
 <title, expected result, constraints>
 Mattia's words: "<verbatim, when the issue comes from his feedback or a hand check>"
-Owns: <files you may change>. Do NOT touch: <files owned by another worker, and who>.
+Owns: <files you may change; in a parallel wave, your own section of each shared doc>. Do NOT touch: <files owned by another worker, and who>.
+Hand check data: <when Mattia will check by hand: which test data must be real, such as files that must open>.
 Skill: <the implementing skill from kinds.md, plus any domain skill; required for any thread that writes code>
 Repo: <personal | client>. Tracker: <Traccia | none>. Away mode: <on | off>.
 Private project notes: <paths, if the project has them; read them first>.

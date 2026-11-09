@@ -12,16 +12,16 @@ For a brief longer than a screenful. The substance lives in a file; the worker's
 **Date** · **Repo** · **Issue** · **Branch** (based on <defaultBranch>) · **Kind** (kinds.md; name the skill)
 
 ## What to do
-2-5 plain sentences.
+First step: load your tracker's tools, or say in the report they are missing. Then 2-5 plain sentences.
 ## Context you need
 Why, and background not obvious from the code.
 ## Read first
 - `path` or URL: what to look for
 ## Ownership
-Owns: <files>. Do NOT touch: <files, and who owns them>.
+Owns: <files; in a parallel wave, its own section of each shared doc>. Do NOT touch: <files, and who owns them>.
 ## Constraints
 ## Definition of done
-Checklist with the commands to verify.
+Checklist with the commands to verify, ending with one in-thread review pass (kinds.md, Review layers). A hand check: which test data must be real (files that must open, a real account).
 ## Out of scope
 ## Reporting
 <the line: read ~/.claude/skills/tracer/worker-rules.md first and follow it; report to thread <ORCHESTRATOR_THREAD_ID> (and its environmentId on a linked machine)>
