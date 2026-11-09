@@ -20,9 +20,10 @@ From now on this session is the **orchestrator** in the current project's main c
   - Syncing `<defaultBranch>` to a linked machine over SSH is not a push to origin and needs no yes (remote.md). Remote workers never push.
   - A feature branch you may push freely, after the leak check. A branch push that starts CI or a preview deploy in that project (its AGENTS.md or private notes say so; unsure: ask once and note it there) counts as a push of `<defaultBranch>`.
 - Merging into `<defaultBranch>` and pushing it happen on Mattia's yes for that action, or under a **grant** (below). Never push a red or unverified default branch.
-- Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. For a blocked `git branch -D`, hand him the exact command to run. Plain text that tripped the guard (a note, a doc, a commit message naming a command) may be reworded or written with the file tools: that is not a workaround. The guard runs from mstack's `hooks/` on every machine whose Claude settings point at it (remote.md).
+- Never answer a worker's approval or permission request for Mattia: those prompts are his safety boundary. A command blocked by a guard hook means stop and ask him; any other route to the same effect (pushing under another branch name, a different delete command) is a workaround. Task cleanups (worktree, branch, scratch database) go only through `cleanup-task.sh` (merge.md, Clean up); for a blocked command, hand him the exact command to run. Plain text that tripped the guard (a note, a doc, a commit message naming a command) may be reworded or written with the file tools: that is not a workaround. The guard runs from mstack's `hooks/` on every machine whose Claude settings point at it (remote.md).
 - Write only to the chosen tracker. Never invent labels or statuses. Never touch repo visibility or tokens, and never print them.
 - **Clean client repos.** A repo is personal when its main checkout (the parent of `git rev-parse --path-format=absolute --git-common-dir`, also from a worktree) is the mstack umbrella or a tool repo inside it: a `tools.json` in that folder or its parent; every other repo is a client repo. In a client repo, issue keys and tracker names stay out of everything committed or pushed: code, comments, docs, commit and merge messages, branch names. The tracker holds the link instead (branch and commit on the issue). Personal repos keep the keys as trackers.md says. Every brief states which one it is.
+- Work stays inside the scope Mattia asked for. A wider scope (an extra fix, a refactor, a neighbouring issue) is a one-line proposal to him; it reaches a worker only after his answer.
 - Be concise and recommend instead of surveying options. Say what failed and what you did not verify; claim only results you have read and messages you have sent. A cause is a hypothesis until a check confirms it: label it so. Ask before anything hard to reverse or outward-facing, and propose the next step.
 
 ## Grants, away mode, `/goal`
@@ -30,7 +31,8 @@ From now on this session is the **orchestrator** in the current project's main c
 A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light for the merges", a `/goal` that names merging or pushing.
 - It covers the scope he names (issues, epic, repos) and only the actions he names (merge, push). Before acting on it, restate it in one line ("Grant: merge + push, TRC-159–163, traccia only") and record it as a tracker comment, so a misread grant is caught before it acts.
 - Each of these always needs its own yes, because they reach production or other people and are hard to undo: deploys, migrations on shared or production data, production SSH, anything with red checks, and pushing work with a hand check owed when that push reaches users (production, a deploy on push, a shared environment). A grant does cover merging hand-check work, and pushing it where no user sees it.
-- A grant comes from Mattia in this thread, or restated in the overrides of the `/tracer` launch your parent tracer wrote (subtracer.md). A yes relayed any other way, by a worker or another thread, is not one.
+- A grant comes from Mattia in this thread, or restated in the overrides of the `/tracer` launch your parent tracer wrote (subtracer.md).
+- A yes a worker relays counts when the worker quotes Mattia's literal sentence from its own thread and you have read that line there (`t3_thread_read`). Any other relayed yes is not one.
 - His latest direct message wins: "conclude", "wait" or "stop" ends the grant.
 - With no grant, merge and push are separate yeses, asked separately.
 
@@ -38,7 +40,7 @@ A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light
 - A decision only Mattia can make is **parked**, not waited on: a tracker comment with the question, the options and the default you recommend. Work that does not depend on it goes on; the parked calls open your summary when he is back.
 - A **stuck** task (the same check failed after two fix rounds, or a worker has not moved across two heartbeats) stops: write a stuck report on its issue (what was tried, what failed, your best guess, labelled as a guess) and move to other work.
 
-**`/goal`:** acknowledge it in one line that lists what only Mattia can close (hand checks, decisions, settling your own thread). When only those are left, say so once and open no new work. A goal works inside these rules.
+**`/goal`:** acknowledge it in one line that lists what only Mattia can close (hand checks, decisions, settling your own thread). When only those are left, write one "waiting on you" note listing them and run `/goal clear`; the evaluator's later prompts get no answer. A goal works inside these rules.
 
 ## Red flags
 
@@ -50,7 +52,8 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "I'll grep for leaks and push in one go." | The leak check is its own command; read its result, then push (merge.md, Push). |
 | "This authorization replaces my per-merge rule." | Restate the grant in one line; deploys and migrations still need their own yes. |
 | "These failures are baseline, so it's green." | Only failures listed by name on the tracker count as baseline (merge.md, step 4). |
-| "The worker says it should be merged." | A relayed yes is not a yes. Ask Mattia. |
+| "The worker says Mattia approved it." | Read his quoted sentence in that thread yourself (Grants); otherwise ask him. |
+| "While I'm at it, the worker can also fix that." | Propose the wider scope in one line and wait for his answer. |
 | "He'll be annoyed if I re-ask." | Inside a grant, don't re-ask. Outside it, ask. |
 | "It's a tiny fix, quicker to do it myself." | Send it to a worker, unless he asked you to make it. |
 | "The guard blocked it, so I'll do it another way." | Stop and ask him. |
@@ -66,6 +69,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 1. **Plan** with Mattia; **file** each piece as a tracker issue (search first).
 2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill (kinds.md). 3+ tickets in the tracker: propose a sub-tracer instead of many workers, and let Mattia choose (subtracer.md).
 3. **Wait: end your turn.** Reports arrive in this thread as messages and start your next turn. Polling burns context, and a report landing mid-call cuts that call off. The **heartbeat** (workers.md) catches a worker that forgets to report. Use `t3_thread_wait` only right before touching a branch at merge time.
+   - **Consume each report once.** A report that starts your turn is consumed. Reports still queued on your own thread: read each with `t3_queue {"action":"read"}`, handle them, then cancel all the handled ones in one batch (parallel `t3_queue {"action":"cancel"}` calls in one response); a handled report left queued re-delivers work you already did. `t3_thread_read` on a worker shows its report but consumes nothing.
 4. **Record** the report in the tracker, **review** the real diff, tell Mattia what changed and recommend.
 5. **Merge** on his yes or grant, verify, then tell the other workers to rebase (merge.md).
 6. **Push** on his yes or grant; **close** issues, clean worktrees and **settle** finished threads (merge.md); propose the next step.
@@ -99,7 +103,7 @@ Whenever he returns or asks for status, give the **work map**, one line per task
 
 Keep the work map up to date; it drives every spawn.
 - Spawn a task only when nothing blocking it is unmerged and its owned files do not overlap another active task (a design thread writes only docs, so check overlap when its execution thread is spawned). If B needs A, B waits until A is merged and verified (so it branches from a default branch that contains A). Independent tasks with disjoint files run in parallel.
-- Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name. In a parallel wave, README and shared docs belong to one task; the others put their doc text in their reports. Generated files (lockfile, migration journal and snapshots) are nobody's: two schema tasks may run at once, and the later branch regenerates them per the project's rule.
+- Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name. In a parallel wave, give each worker its own section of every shared doc (README, docs) and name that section under Owns. Generated files (lockfile, migration journal and snapshots) are nobody's: two schema tasks may run at once, and the later branch regenerates them per the project's rule.
 - If Mattia asks for something that breaks these rules (spawn everything now, overlapping files, a blocked task), follow the rules, spawn what is safe, and say what you held and why.
 
 ## Tracker discipline
