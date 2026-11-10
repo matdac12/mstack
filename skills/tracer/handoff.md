@@ -24,7 +24,7 @@ Owns: <files; in a parallel wave, its own section of each shared doc>. Do NOT to
 Checklist with the commands to verify, ending with one in-thread review pass (kinds.md, Review layers). A hand check: which test data must be real (files that must open, a real account).
 ## Out of scope
 ## Reporting
-<the line: read ~/.claude/skills/tracer/worker-rules.md first and follow it; report to thread <ORCHESTRATOR_THREAD_ID> (and its environmentId on a linked machine)>
+<the line: read ~/.claude/skills/tracer/worker-rules.md first and follow it; then the report line from workers.md (Brief), word for word, with thread <ORCHESTRATOR_THREAD_ID> (and its environmentId on a linked machine)>
 ## Skill
 <the implementing skill from kinds.md, plus any domain skill; required when the task writes code>
 ```
@@ -35,7 +35,7 @@ For continuing work already started, use instead: Goal, Where we are (say if tes
 
 ```
 Your task for <ISSUE-ID> is in /abs/path/docs/handoff/<file>.md (outside your worktree; do not commit it).
-Read it first, then carry out the task. Its Reporting section says how to report to thread <ORCHESTRATOR_THREAD_ID>.
+Read it first, then carry out the task. When it is done, your last act is one REPORT sent with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID>, mode `queue` (its Reporting section).
 ```
 
 Tell Mattia the path and which thread got it.

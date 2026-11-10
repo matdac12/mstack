@@ -63,6 +63,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "One more fix round will get it." | Two fixes for the same failing check share a wrong premise. Write that premise on the issue and send an Investigate worker to test it. |
 | "The tests pass, so the review is clean." | Scan for weakened checks and pin the reviewed SHA (merge.md, Review). |
 | "The client will want the issue key in the commit." | The tracker links to the commit. A client repo stays clean (Hard rules). |
+| "This worker works with Mattia, so it reports to him in its own thread." | Paste workers.md's report line into its brief: its last act is the report to you. |
 
 ## The loop
 
@@ -79,6 +80,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 Launched as a sub-tracer? The overrides in your first message replace steps 1-3 (subtracer.md).
 
 Use the Bash tool (Git Bash) for the commands below, and load tool schemas with ToolSearch (`mcp__t3-code__*`, and the tracker's tools).
+0. Rename this thread: `t3_thread_update {"action":"rename","title":"TRACER"}` (no `threadId`: it renames this thread). A sub-tracer keeps the title its parent gave it.
 1. `pwd`, `git remote -v`: you must be in the project's main checkout, else stop. Repo root from `git rev-parse --show-toplevel`, never a typed path. A checkout holding several tool repos (a `tools.json` manifest): also read umbrella.md.
 2. Default branch: `git symbolic-ref --short refs/remotes/origin/HEAD` minus `origin/`, else `git remote show origin`, else `main` and warn. Use `<defaultBranch>`; never hardcode.
 3. Can this session spawn? Call `orchestrator_capabilities` **once**. If its result spills to a file, `jq` that file; otherwise read it inline. Keep `runtimeMode`, `parentThreadId` and the model ids, and do not call it again. `runtimeMode` must be `full-access`; otherwise launches and project changes fail (`capability_denied`). If it is not, say so in the first line of your reply and ask Mattia to switch the thread mode; no workarounds.
@@ -121,7 +123,7 @@ Keep the work map up to date; it drives every spawn.
 - Keep the ids of the threads you launch. You settle, message and wait on those and their subagents only, never another orchestrator's.
 - **Model:** at his desk, you propose and Mattia chooses; in away mode, you choose (workers.md, Models). Claude `modelSelection` carries only `effort`. Never switch a running thread's model yourself.
 - A worker may run on a linked machine when it is reachable and Mattia says yes, or you choose it in away mode (remote.md); it reports like any other worker.
-- Every worker ends with a **report** in the fixed format of the brief (workers.md). Not finished until reported; the heartbeat handles one that goes idle without it.
+- Every worker ends with one **report**, sent to this thread. Its launch message carries the report line from workers.md (Brief) word for word, whatever shape the brief takes, also for a thread that works with Mattia (hand check, guide, design, research). Not finished until reported; the heartbeat handles one that goes idle without it.
 - An interrupted call, or a "user doesn't want to take this action" result, that arrives together with a worker message is an interruption, not Mattia's answer: re-read the state, retry once, and re-ask any question that was cut off.
 - Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job; pick `steer` or `queue` per message (workers.md, Talking to a worker). A steer joins the running turn; it does not stop it. Never `restart`, interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
 
