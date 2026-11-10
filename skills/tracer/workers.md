@@ -103,14 +103,14 @@ A worker that needs a remote host (a server, a database, a test device): check t
 
 Small, clear task: this brief as the launch message. Big task: write a handoff document (handoff.md) containing it and send only the short pointer. The fixed rules and the report format live in `worker-rules.md`, which every worker reads; never paste them, and never put shell syntax (`$(...)`) in a launch message: tool parameters are not a shell. A user-only skill (kinds.md) goes as the first line of the launch message, before the brief or the pointer.
 
-**The report line** (the `Report:` paragraph below) goes into every launch message word for word, with your thread id filled in, however else the brief is shaped: the template, a handoff pointer, or a free-form brief for a thread that works with Mattia (a hand check, a guide, a design, a research he decides on). The worker's own thread is not yours: "report here" or "present it to Mattia" leaves you with no report.
+**The report line** (the `Report:` paragraph below) goes into every launch message word for word, with your thread id filled in, however else the brief is shaped: the template, a handoff pointer, or a free-form brief for a thread that works with Mattia (a hand check, a guide, a design, a research he decides on). The worker's own thread is not yours: "report here" or "present it to Mattia" leaves you with no report. A brief for a thread that works with Mattia (never in away mode) also carries the line "Mattia works with you in this thread."; every other worker reports without waiting for anyone.
 
 ```
 Do <ISSUE-ID> in the <project> repo (this worktree, branch `<branch>`, based on the local <defaultBranch>).
 
 First step: load your tracker's tools (Traccia: then `whoami`); missing means say so in your report. Then read ~/.claude/skills/tracer/worker-rules.md and follow it (sections: Every worker, plus Code work or Design, prototype and docs).
 
-Report: when the work is done (with Mattia in this thread: once he approves the outcome), your last act is one REPORT sent with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID><, environmentId <ID>, on a linked machine>, mode `queue` (worker-rules.md, Report back). Until then, progress stays in this thread.
+Report: when the work is done, your last act is one REPORT sent with `t3_thread_send` to thread <ORCHESTRATOR_THREAD_ID><, environmentId <ID>, on a linked machine>, mode `queue` (worker-rules.md, Report back). Send it without waiting for anyone's approval, unless this brief says Mattia works with you in this thread; then send it once he approves the outcome. Until then, progress stays in this thread.
 
 ## The issue
 <title, expected result, constraints>
