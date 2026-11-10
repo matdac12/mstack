@@ -2,13 +2,14 @@
 
 ## Models
 
-Only these five. Another model only when Mattia names it.
+Only these six. Another model only when Mattia names it.
 
 | Worker | `modelSelection` | Use for |
 | --- | --- | --- |
 | Claude Sonnet 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-sonnet-5-5","options":[{"id":"effort","value":"medium"}]}` | Implementation, execute-a-plan, fixes, refactors. The default. |
 | Claude Opus 5.5 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}` | Design, hard refactors, anything Sonnet struggled with. |
-| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **The review model, and nothing else**: second-model reviews (kinds.md, Review), read-only, with `reasoningEffort` set by risk there. Never code work: Mattia's OpenAI plan is small. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
+| GPT 6.1 Sol | `{"instanceId":"codex","provider":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"},{"id":"serviceTier","value":"default"}]}` | **A review model, and nothing else**: second-model reviews (kinds.md, Review), read-only, with `reasoningEffort` set by risk there. Never code work: Mattia's OpenAI plan is small. `serviceTier` is always `default`. When he moves to a newer OpenAI model, only this row changes. |
+| Claude Fable 5.2 | `{"instanceId":"claudeAgent","provider":"claudeAgent","model":"claude-fable-5-2","options":[{"id":"effort","value":"<effort>"}]}` | **A review model**: second-model reviews (kinds.md, Review), read-only, with `effort` set by risk there. Code work only when Mattia picks it. Never set its `ultracode` option: it starts many-agent workflows. |
 | DeepSeek 4.1 Flash | `{"instanceId":"opencode","provider":"opencode","model":"opencode-go/deepseek-v4.1-flash","options":[{"id":"variant","value":"high"}]}` | Guide, tests, docs. The only OpenCode model. |
 | Grok 4.7 | `{"instanceId":"grok","provider":"grok","model":"grok-4.7","options":[{"id":"reasoningEffort","value":"<effort>"}]}` | Any task, only when Mattia picks it. Offer it in your proposal; when he picks it, ask the effort (`low`, `medium`, `high`, `xhigh`) unless he gave one. Always the `grok` instance (xAI), never Grok through `cursor`. The only Grok model. Grok hides MCP tools until it searches for them: its brief says to search its tools for `t3_thread_send` (server `t3-code`) first and to report with it. |
 
