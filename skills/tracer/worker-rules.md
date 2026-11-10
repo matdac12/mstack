@@ -28,12 +28,17 @@ You are a worker thread launched by the tracer (the orchestrator). Your brief gi
 ## Design, prototype and docs threads
 
 - Follow the brief's skill. Commit only docs (spec, plan, decision note, docs) unless the brief says otherwise; implement nothing.
-- Design and prototype threads are Mattia's: one question at a time, with a recommendation. Report only once he has approved (a draft is not a report).
+- Design and prototype threads are Mattia's: one question at a time, with a recommendation. Once he has approved, send the report to the orchestrator (Report back); a draft is not a report.
 - On a linked machine, anything he should look at (prototypes, a visual companion) is served over the tailnet and you give him the link.
 
 ## Report back (mandatory, your last act)
 
-Your report is the last thing you do, once per task. Before sending it: every commit made, every review subagent finished, the worktree clean, and any orchestrator message that reached you acted on (a steer comes first). A corrected report opens with "Supersedes earlier reports". Then send it with `t3_thread_send` to the brief's orchestrator thread (with its `environmentId` when the brief gives one), mode `queue`, and end your turn with nothing after it. If the send fails, post the full report as your last message with the exact error.
+Every task ends with exactly one report, sent to the orchestrator. The orchestrator learns that your work is done only from this message: a summary in your own thread never reaches it. This holds just the same when you work with Mattia in your thread (a hand check, a guide, a design, a research he decides on).
+
+- **When:** once the work is done: every commit made, every review subagent finished, the worktree clean, and any orchestrator message that reached you acted on (a steer comes first). With Mattia in your thread, done is the moment he approves the outcome or tells you the work is finished.
+- **Only at the end.** Progress, questions to Mattia and drafts stay in your own thread. Message the orchestrator mid-task only when you are blocked on something only it can give, or Mattia tells you to; that message is not your report, and the report still follows at the end.
+- **How:** `t3_thread_send` to the brief's orchestrator thread (with its `environmentId` when the brief gives one), mode `queue`, in the format below. Then end your turn with nothing after it. If the send fails, post the full report as your last message with the exact error.
+- **Work after the report** (Mattia asks for one more change, or you correct something): it ends with a new report that opens with "Supersedes earlier reports".
 
 ```
 REPORT <ISSUE-ID>
