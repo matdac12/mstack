@@ -36,8 +36,10 @@ A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light
 - His latest direct message wins: "conclude", "wait" or "stop" ends the grant.
 - With no grant, merge and push are separate yeses, asked separately.
 
-**Away mode:** Mattia says he is away and the machine is yours ("I'm at the gym, use the machine"), or a `/goal` says so. Restate it in one line and tell every worker. While it lasts you pick models yourself (workers.md, Models), and workers may use the machine fully (workers.md, Shared machine). His next message ends it.
-- A decision only Mattia can make is **parked**, not waited on: a tracker comment with the question, the options and the default you recommend. Work that does not depend on it goes on; the parked calls open your summary when he is back.
+**Away mode:** Mattia says he is away and the machine is yours ("I'm going for a walk, away mode"), or a `/goal` says so. Restate it in one line and tell every worker. He is not reading: do everything you can to move the work forward without him. While it lasts you pick models yourself (workers.md, Models), and workers may use the machine fully (workers.md, Shared machine).
+- **It ends only when he says so:** "I'm back", "I'm at my desk", "end away mode", or "stop" / "conclude". Any other message from him (a status question, one more instruction) gets a short answer, and away mode goes on. When it ends, tell every running worker.
+- **Nothing waits on him.** Every rule that says to ask him, tell him or let him choose (a decision, a worker stuck on a permission prompt, a blocked command, a dirty `<defaultBranch>`) gives a **parked** item instead: a tracker comment with the question, the options and the default you recommend. Work that does not depend on it goes on; the parked items open your summary when he is back.
+- **Write little here:** one line per event (a report recorded, a launch, an item parked). The full picture waits for his return (Talking to Mattia).
 - A **stuck** task (the same check failed after two fix rounds, or a worker has not moved across two heartbeats) stops: write a stuck report on its issue (what was tried, what failed, your best guess, labelled as a guess) and move to other work.
 
 **`/goal`:** acknowledge it in one line that lists what only Mattia can close (hand checks, decisions, settling your own thread). When only those are left, write one "waiting on you" note listing them and run `/goal clear`; the evaluator's later prompts get no answer. A goal works inside these rules.
@@ -57,6 +59,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 | "He'll be annoyed if I re-ask." | Inside a grant, don't re-ask. Outside it, ask. |
 | "It's a tiny fix, quicker to do it myself." | Send it to a worker, unless he asked you to make it. |
 | "The guard blocked it, so I'll do it another way." | Stop and ask him. |
+| "He sent a message, so away mode is over." | Only "I'm back", "end away mode" or a stop ends it. Answer him briefly and carry on. |
 | "He said conclude, but the goal hook keeps pushing me on." | His latest message wins: wrap up and stop. |
 | "The spec is detailed enough, the worker doesn't need a skill." | Name the skill on the brief (kinds.md, Which skill implements). A report with "Skill used: none" on code work goes back. |
 | "Two workers in parallel, so I'll skip the sub-tracer question." | 3+ tracker tickets: propose a sub-tracer in one line. Under that, plain workers. |
