@@ -66,13 +66,15 @@ Overwrite `~/.t3/handoffs/<repo name>/close-of-day.md` (create the folder). It s
 <or "nothing">
 ## This session
 Orchestrator thread <id>: finished with this note. Its threads are settled, or listed above; a new session owns everything from here.
+<in a tracer session, add:> Tracer session. If the tracer skill is not loaded when you read this, launch no thread and merge nothing: ask Mattia to send `/tracer` first.
 ```
 
 ## 6. Hand back
 
-Reply with what waits on him and a few lines on what you changed in the tracker and docs, then a paste-in prompt for tomorrow in a code block:
+Reply with what waits on him and a few lines on what you changed in the tracker and docs, then a paste-in prompt for tomorrow in a code block. In a tracer session it starts with `/tracer` on its own line, so tomorrow's session loads the skill instead of orchestrating from memory:
 
 ```
+/tracer
 Resume <repo>. Read ~/.t3/handoffs/<repo name>/close-of-day.md first, then check it against git before doing anything.
 ```
 

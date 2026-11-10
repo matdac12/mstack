@@ -8,6 +8,7 @@
 #     aborts the merge. A fetched ref is deleted once merged.
 #   land.sh sync <repo-root> <ssh> <remote-root>
 #     Pushes the default branch to local/<default> there (never forced).
+# TRACER_DEFAULT=<branch> overrides the default branch (a sub-tracer's epic).
 # Verifying the merged result stays yours. Exit 0 done, 1 stopped, 2 usage.
 set -u
 
@@ -16,7 +17,7 @@ usage() { sed -n '2,11p' "$0"; exit 2; }
 
 cmd=${1:-}; repo=${2:-}
 [ -n "$cmd" ] && [ -n "$repo" ] || usage
-default=$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)
+default=${TRACER_DEFAULT:-$(git -C "$repo" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)}
 default=${default#origin/}; default=${default:-main}
 
 case "$cmd" in

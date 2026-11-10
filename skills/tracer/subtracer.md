@@ -12,13 +12,13 @@ A **sub-tracer** is a worker thread that is itself a tracer. It spawns its own w
 
 `t3_thread_launch`, `runtimeMode: "full-access"`, the model Mattia picked for all workers (workers.md, Models), title `<EPIC-ID> · epic <slug>`, and a worktree on a new epic branch: `{"type":"worktree","baseRef":"<defaultBranch>","branch":"<epic-slug>","startFromOrigin":false}`. `baseRef` is the commit that holds the approved spec, plan and tickets: the design branch when they are not merged yet, else an integration branch (below). **You decide the epic worktree and branch** (record path and branch on the epic issue); the sub-tracer creates no other checkout of its own, and every worker it launches gets a worktree branching from the epic branch. Nothing the sub-tracer or its workers do touches the main checkout or other branches. Seed the worktree as in workers.md. The brief is always a handoff doc (handoff.md), with the pointer in the message, so both of you can re-read it after a compaction.
 
-The message starts with `/tracer <tracker>` and then **overrides that win over the skill**:
+The message starts with `/tracer` and then **overrides that win over the skill**:
 
 ```
-/tracer <tracker>
+/tracer
 
 You are the sub-tracer for <EPIC-ID>, epic branch `<epic>`. Parent thread: <PARENT_THREAD_ID>. These overrides win over the skill:
-- Your worktree is your "main checkout" and `<epic>` is your `<defaultBranch>`; preflight accepts that. Your workers branch from `<epic>`; you merge them into it following merge.md (review, full checks, rebase notices).
+- Your worktree is your "main checkout" and `<epic>` is your `<defaultBranch>`; preflight accepts that. Your workers branch from `<epic>`; you merge them into it following merge.md (review, full checks, rebase notices), running `land.sh` as `TRACER_DEFAULT=<epic> bash ~/.claude/skills/tracer/scripts/land.sh merge ...`.
 - You never push, open PRs or merge into `<realDefaultBranch>`. merge.md's Push section does not apply.
 - Model and skills are decided: workers run <model> and use <skill, from kinds.md "Which skill implements", e.g. /implement as the first line of each launch>. Do not ask again.
 - The epic and its sub-issues are <IDS>. A sub-issue goes In Review when merged into `<epic>`, and Done only once its hand check passed (or at that merge when it needs none). Leave the epic In Progress; the parent closes it.

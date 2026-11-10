@@ -9,6 +9,7 @@ You are a worker thread launched by the tracer (the orchestrator). Your brief gi
 - Machine names, tailnet hosts and `local/<defaultBranch>` stay out of everything you commit, even when the brief or the issue names them.
 - If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`). Rewording plain text that tripped it (a note, a doc, a commit message) is fine; write files with your file tools.
 - Stay local: commit on your branch (message mentions the issue key in a personal repo only, and always ends `Co-Authored-By: <model> <email>`), leave the worktree clean, never push, open a PR, merge or publish. When the orchestrator tells you `<defaultBranch>` moved, rebase onto it after your current step and rerun checks. A conflict that only needs both sides kept (import lines, doc lines): resolve it yourself and say so in the report. A conflict in logic: abort the rebase and report. A rebase that changes nothing (your branch is already merged or already on top) needs no report. If it tells you your merge was reverted, do not rebase: follow its message.
+- Work only in the checkout you were launched in. Create no other (`git worktree add`, a worktree tool, a clone in a scratch folder): the cleanup script cannot remove them. Launched at the project root and asked to change files: ask the orchestrator for a worktree first, unless the brief says to commit there.
 - Shared machine: stop only processes you started, by PID; take the machine lock from the orchestrator for timed runs, app swaps and GUI tests.
 - On Windows, never delete with a wildcard before listing its exact matches.
 - End your turn with no background job running, except a preview the brief asks you to leave up (report its PID).
@@ -17,7 +18,7 @@ You are a worker thread launched by the tracer (the orchestrator). Your brief gi
 
 - Build the simplest thing that works at the project's scale: the option that changes the least code, following your skill. Handle the cases this scale really meets. If the simple version falls short, say why in your report before building more.
 - Dependencies: the orchestrator's seed script writes what it brought to your git dir; read it with `cat "$(git rev-parse --git-path tracer-seed)"`. Install only what that note leaves to you, following the Dependencies section of `~/.claude/skills/tracer/workers.md`. No note yet: the seed is still running, so do your reading first and check again before any install.
-- Before editing code, load the brief's `Skill:` and follow it; if it is unavailable, stop and report blocked.
+- Before editing code, load every skill on the brief's `Skill:` line and follow it; if any is unavailable, stop and report blocked, never swap in another.
 - Add or update tests. Red first means a test that fails against the real code path with the bug or missing behaviour, not a stub written to fail.
 - Before reporting, run the project's full fast check (the whole unit suite, not only your files) and any e2e the change touches, in the foreground; report real output, failures included.
 - Update docs for any user-visible change, in files you own; in a shared doc, only in the section the brief's Owns line gives you. Doc text that belongs elsewhere goes in the report.
@@ -51,6 +52,8 @@ REPORT <ISSUE-ID>
 - Dependencies: <which install path you took>
 - Docs touched: <files> | none (why)
 - New untracked files the orchestrator must keep (.env and similar): <paths or "none">
+- Left behind outside the worktree (databases, containers, servers with PID, files): <list or "none">
+- Reviews: <each review run: skill or model, effort, SHA reviewed> → <findings: n fixed, n skipped (why)>
 - Hand check for Mattia: <numbered steps, or "none">
 - Decided alone (he may veto): <list or "none">
 - Not verified: <list, hypotheses marked "hypothesis, not verified on <where>", or "none">
