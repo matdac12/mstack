@@ -9,11 +9,14 @@
 | `sonnet` | `claude --model claude-sonnet-5-5 --effort <e>` | Implementation, execute-a-plan, fixes, refactors. The default, at `medium`. |
 | `opus` | `claude --model claude-opus-5-5 --effort <e>` | Design, hard refactors, anything Sonnet struggled with, at `high`. |
 | `fable` | `claude --model claude-fable-5-2 --effort <e>` | **A review model**: second-model reviews (tracer kinds.md, Review), read-only, effort by risk there. Code work only when Mattia picks it. Never its `ultracode` option. |
-| `gpt` | `codex --no-daemon -m gpt-6.1-sol -c model_reasoning_effort=<e>` | **A review model, and nothing else**, as in tracer: Mattia's OpenAI plan is small. `--no-daemon` keeps Codex's commands inside the terminal. |
+| `gpt` or `gpt:<model>` | `codex --no-daemon --sandbox danger-full-access -m <model> -c model_reasoning_effort=<e>` (default model `gpt-6.1-sol`) | **A review model, and nothing else**, as in tracer: Mattia's OpenAI plan is small. Another GPT model (`gpt:gpt-6-luna`) only when he names it. |
+| `grok` | `grok -m grok-4.7 --effort <e>` | Any task, only when Mattia picks it; ask the effort (`low`, `medium`, `high`, `xhigh`) unless he gave one. |
 
-Grok and DeepSeek (OpenCode) are installed on Windows only and have no row: when Mattia picks one, start it by hand with `hc run --bg --outlive-parent --name <n> --parent <you> --cwd <checkout> <cli> …`, after reading `<cli> --help` for its model flag, and tell him it is a first try.
+Codex flags: `--no-daemon` keeps its commands inside the terminal; `--sandbox danger-full-access` is T3's full-access mode, and without it the worker cannot run `hc` from WSL (the sandbox blocks the socket WSL uses to start Windows programs), so it can never report. Mattia's permission settings still apply. DeepSeek (OpenCode) is installed on Windows only and has no row: when he picks it, start it by hand with `hc run --bg --outlive-parent --name <n> --parent <you> --cwd <checkout> opencode …`, after reading `opencode --help`, and tell him it is a first try.
 
 **Choosing:** as tracer's workers.md, Models (at his desk you propose and he picks; away mode you pick Claude only; Design and Guide are his). Co-Authored-By trailer matches the model.
+
+**A worker's word on its own model is not evidence:** Codex workers have named the wrong model. The work map takes the model from the launch command or the agent's status bar (`hc read`).
 
 ## Worktree (first thread of a task)
 
@@ -30,7 +33,7 @@ Branch named per tracer's trackers.md (a client repo names it by the change, no 
 
 1. Write the brief (Brief, below) to `<git dir>/tracer-brief-<name>.md`, where `<git dir>` is `git -C <checkout> rev-parse --path-format=absolute --git-dir`: untracked, beside the task, gone with the worktree. A big task: the handoff document (tracer handoff.md) is the brief file.
 2. `bash ~/.claude/skills/tracer-herdr/scripts/spawn-worker.sh <name> <checkout> <model> <effort> <brief file>`. Name: `<issue-id>-<2-3 words>` in lowercase, hyphens, at most 32 characters (`proj-12-login-form`). It starts the agent in a new terminal in your sidebar space, as your child (its blocked, error and exit notes come to you), outliving you, with the first message "Read <brief file> and follow it." From WSL the worker runs in WSL.
-3. Keep its address from the printed JSON. About a minute later, `hc get <name>`: `working` is good; `blocked` on startup is usually a trust or MCP prompt: `hc read <name>` and tell Mattia (he answers it in the sidebar). Note on the work map when you expect the report.
+3. Keep its address from the printed JSON. About a minute later, `hc get <name>`: `working` is good; `blocked` on startup is usually a trust or MCP prompt: `hc read <name>` and tell Mattia (he answers it in the sidebar). **Codex: always `hc read <name> --lines 0` as well.** Herdr does not see Codex's "Trust this folder?" prompt (status stays empty or `idle`, no note comes), so only the screen shows it. Note on the work map when you expect the report.
 
 A launch error: `hc ls` before retrying, a half-started terminal may exist.
 

@@ -60,7 +60,7 @@ Never answer a worker's `blocked` prompt (`hc send --force`, `hc keys`): that is
 1. **Inside Herdr?** `hc --self` must print your address. It fails: say "not running inside a Herdr terminal" in your first line and stop. Keep the address: it is the report target in every brief. Then `hc --skill`, read once.
 2. `pwd`, `git remote -v`: you must be in the project's main checkout, else stop. Repo root from `git rev-parse --show-toplevel`. Note whether you run on Windows (Git Bash) or in WSL (`uname -s`): workers run on the same side as the repo.
 3. Default branch: `git symbolic-ref --short refs/remotes/origin/HEAD` minus `origin/`, else `git remote show origin`, else `main` and warn.
-4. Agent CLIs: `command -v claude codex`. A missing one removes its rows from the model table for this session; say so in one line.
+4. Agent CLIs: `command -v claude codex grok`. A missing one removes its rows from the model table for this session; say so in one line.
 5. Tracker, project docs, private notes, scale, scratch databases, personal or client repo: tracer SKILL.md Preflight steps 4 and 5, as written. Then read this skill's workers.md and tracer's kinds.md. Read tracer's merge.md at the first merge.
 6. Read `~/.claude/skills/unslop/SKILL.md` in full; everything you write to Mattia follows it. Missing: write plainly and say so in one line.
 7. `hc machine ls`: keep the connected machines for workers.md, Other machines. None: say nothing.

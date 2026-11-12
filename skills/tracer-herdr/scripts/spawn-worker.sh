@@ -4,8 +4,8 @@
 # Usage: spawn-worker.sh <name> <checkout> <model> <effort> <brief-file>
 #   name      unique among live terminals: 1-32 of a-z 0-9 - _
 #   checkout  the task's worktree (or the main checkout for read-only work)
-#   model     sonnet | opus | fable | gpt
-#   effort    claude: low | medium | high | xhigh | max; gpt: low | medium | high | xhigh
+#   model     sonnet | opus | fable | grok | gpt | gpt:<model> (gpt alone: gpt-6.1-sol)
+#   effort    claude: low | medium | high | xhigh | max; gpt, grok: low | medium | high | xhigh
 #   brief     the file holding the brief; the worker's first message only points to it
 # Works from Windows (Git Bash) and WSL. From WSL the worker runs in WSL too.
 # The worker is this terminal's child (its blocked, error and exit notes come
@@ -26,8 +26,14 @@ case "$model" in
   sonnet) cmd="claude --model claude-sonnet-5-5 --effort $effort" ;;
   opus)   cmd="claude --model claude-opus-5-5 --effort $effort" ;;
   fable)  cmd="claude --model claude-fable-5-2 --effort $effort" ;;
-  gpt)    cmd="codex --no-daemon -m gpt-6.1-sol -c model_reasoning_effort=$effort" ;;
-  *) echo "unknown model: $model (sonnet | opus | fable | gpt)" >&2; exit 2 ;;
+  grok)   cmd="grok -m grok-4.7 --effort $effort" ;;
+  gpt|gpt:*)
+    gm=${model#gpt}; gm=${gm#:}; gm=${gm:-gpt-6.1-sol}
+    case "$gm" in *[!a-z0-9.-]*) echo "bad gpt model: $gm" >&2; exit 2 ;; esac
+    # danger-full-access: Codex's sandbox blocks the socket WSL needs to run hc.exe,
+    # so a sandboxed worker could never report.
+    cmd="codex --no-daemon --sandbox danger-full-access -m $gm -c model_reasoning_effort=$effort" ;;
+  *) echo "unknown model: $model (sonnet | opus | fable | grok | gpt | gpt:<model>)" >&2; exit 2 ;;
 esac
 case "$effort" in *[!a-z]*|"") echo "bad effort: $effort" >&2; exit 2 ;; esac
 
