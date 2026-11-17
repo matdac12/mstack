@@ -4,8 +4,9 @@
 #     Checks the main checkout is on its default branch, clean, with no merge
 #     or rebase in progress; with the remote arguments fetches the branch from
 #     the linked machine into refs/remotes/<label>/<branch>; checks it is the
-#     reviewed commit; merges --no-ff with the message file. On conflicts it
-#     aborts the merge. A fetched ref is deleted once merged.
+#     reviewed commit; runs leak-check.sh on <default>..<branch>; merges --no-ff
+#     with the message file. On conflicts it aborts the merge. A fetched ref is
+#     deleted once merged.
 #   land.sh sync <repo-root> <ssh> <remote-root> [<branch>]
 #     Pushes <branch> (default: the default branch) to local/<branch> there
 #     (never forced).
@@ -42,6 +43,8 @@ merge)
   want=$(git -C "$repo" rev-parse -q --verify "$sha^{commit}") || stop "unknown commit $sha"
   have=$(git -C "$repo" rev-parse -q --verify "$ref^{commit}") || stop "no branch $ref"
   [ "$have" = "$want" ] || stop "$ref is at ${have:0:12}, you reviewed ${want:0:12}: review the new commits first"
+  bash "$(dirname "$0")/leak-check.sh" "$repo" "$default..$ref" \
+    || stop "leak check failed on $branch; rewrite the branch before merging"
   before=$(git -C "$repo" rev-parse HEAD)
   if ! git -C "$repo" merge -q --no-ff -F "$msg" "$ref"; then
     git -C "$repo" merge --abort

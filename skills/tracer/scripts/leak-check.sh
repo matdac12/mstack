@@ -3,8 +3,10 @@
 # Usage: leak-check.sh <repo-root> <rev-range...>   e.g. origin/main..main
 # Looks for: secret-looking values from the repo's untracked .env* files
 # (keys naming a KEY, SECRET, TOKEN, PASS(WORD), DATABASE_URL or DSN), the
-# machine names in ~/.t3/machines.md (any case), and any line in
-# ~/.t3/leak-patterns.txt. Strings in ~/.t3/leak-allow.txt are never
+# machine names in ~/.t3/machines.md (any case), any line in
+# ~/.t3/leak-patterns.txt, and, in a client repo, its tracker name, Mattia's
+# personal skill names, local/<branch> sync refs and the issue keys in
+# `git config tracer.projectKeys`. Strings in ~/.t3/leak-allow.txt are never
 # patterns. Reads added diff lines and commit messages. Prints where a hit
 # is, never the value.
 # Exit 0 clean, 1 hits, 2 usage error. Run it as its own command, never
@@ -61,21 +63,50 @@ p="$HOME/.t3/leak-patterns.txt"
   printf 'pattern\t%s\n' "${x%$'\r'}"
 done >> "$pat"
 
+# 4. Client repos (no tools.json in main checkout or its parent): tracker names,
+# personal skill names and local/<branch> sync refs stay out of commits. The
+# tracker name is matched with its capital letter, so an Italian word such as
+# "traccia" in prose is not a hit.
+common=$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || echo "$repo/.git")
+main=$(dirname "$common")
+client_repo=0
+if [ ! -f "$main/tools.json" ] && [ ! -f "$(dirname "$main")/tools.json" ]; then
+  client_repo=1
+  printf 'tracker name\tTraccia\n'
+  for s in "/tracer" "sub-tracer" "subtracer" "mattpocock-skills" "superpowers:" "unslop" "grill-with-docs" "to-tickets" "to-spec" "close-the-day"; do
+    allowed "$s" || printf 'client-repo rule (%s)\t%s\n' "$s" "$s"
+  done
+  printf 'client-repo regex (local/<branch>)\t(^|[^A-Za-z0-9_./-])local/[A-Za-z0-9]\n'
+  printf 'client-repo regex (refs/heads/local/)\trefs/heads/local/\n'
+fi >> "$pat"
+proj_keys=$(git -C "$repo" config --get tracer.projectKeys || true)
+
 n=$(wc -l < "$pat")
 [ "$n" -gt 0 ] || echo "warning: no patterns found (no .env values, machines.md or leak-patterns.txt)"
 
 hits=$(
   { git -C "$repo" log -p --no-color --no-ext-diff --format='commit %H' "$@"
     git -C "$repo" log --format='commit %H%nmessage%n%B' "$@" | sed '/^commit /!{/^message$/!s/^/+/}'
-  } | awk -F'\t' -v pf="$pat" '
-    BEGIN { while ((getline l < pf) > 0) { i = index(l, "\t"); lab[++k] = substr(l, 1, i-1); val[k] = substr(l, i+1) } }
+  } | awk -F'\t' -v pf="$pat" -v keys="$proj_keys" -v client="$client_repo" '
+    BEGIN {
+      while ((getline l < pf) > 0) { i = index(l, "\t"); lab[++k] = substr(l, 1, i-1); val[k] = substr(l, i+1) }
+      nk = split(keys, ka, /[[:space:]]+/)
+    }
     /^commit / { c = substr($0, 8, 12); f = "?"; next }
     /^message$/ { f = "commit message"; next }
     /^\+\+\+ / { f = substr($0, 7); next }
     /^\+/ { lo = tolower($0)
             for (j = 1; j <= k; j++) {
-              hit = (lab[j] == "machine name") ? index(lo, tolower(val[j])) : index($0, val[j])
+              if (index(lab[j], "client-repo regex") == 1) hit = match(lo, val[j])
+              else if (lab[j] == "machine name" || index(lab[j], "client-repo rule") == 1) hit = index(lo, tolower(val[j]))
+              else hit = index($0, val[j])
               if (hit) print c "  " f "  (" lab[j] ")"
+            }
+            if (client) {
+              for (m = 1; m <= nk; m++) {
+                if (ka[m] != "" && match($0, "(^|[^A-Za-z0-9_])" ka[m] "-[0-9]+([^A-Za-z0-9_]|$)"))
+                  print c "  " f "  (issue key " ka[m] "-NNN)"
+              }
             } }
   ' | sort -u
 )

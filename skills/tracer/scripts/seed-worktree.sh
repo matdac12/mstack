@@ -11,16 +11,22 @@
 #     then the project's verify (`git config tracer.depsVerify`, else the
 #     ecosystem's own); a failed verify removes the copy.
 #   Existing files in the worktree are kept. Env contents are never printed.
-#   The outcome goes to <git-dir>/tracer-seed, which the worker reads.
+#   The outcome goes to <git-dir>/tracer-seed, which the worker reads. The
+#   file appears only when seeding is done (written elsewhere, then renamed
+#   into place), so its absence means "still running: wait, do not install".
 # Exit 0 seeded, 1 failed, 2 usage.
 set -euo pipefail
 
-[ $# -eq 1 ] || { sed -n '2,13p' "$0"; exit 2; }
+[ $# -eq 1 ] || { sed -n '2,17p' "$0"; exit 2; }
 wt=$1
-note=""
+note=""; note_tmp=""
+trap '[ -n "$note_tmp" ] && rm -f "$note_tmp"' EXIT
 fail() {
   echo "seed failed: $*" >&2
-  [ -n "$note" ] && echo "seed failed: $*; install per workers.md, Dependencies" >> "$note"
+  if [ -n "$note_tmp" ]; then
+    echo "seed failed: $*; install per workers.md, Dependencies" >> "$note_tmp"
+    mv -f "$note_tmp" "$note" 2>/dev/null || true
+  fi
   exit 1
 }
 
@@ -42,8 +48,10 @@ main=$(dirname "$common")
 wt=$(git -C "$wt" rev-parse --show-toplevel)
 [ "$wt" != "$main" ] || fail "$wt is the main checkout, not a worktree"
 note="$(git -C "$wt" rev-parse --path-format=absolute --git-dir)/tracer-seed"
-: > "$note"
-say() { echo "$*"; echo "$*" >> "$note"; }
+note_tmp="$note.tmp.$$"
+: > "$note_tmp"
+rm -f "$note"
+say() { echo "$*"; echo "$*" >> "$note_tmp"; }
 
 # MCP approval: without it the worker stalls on "New MCP servers found".
 if [ -f "$main/.mcp.json" ] && [ ! -e "$wt/.claude/settings.local.json" ]; then
@@ -133,3 +141,4 @@ for sub in $(cd "$main" && for d in */; do [ -d "$d" ] && echo "${d%/}"; done); 
   seed_dir "$sub"
 done
 say "seed done"
+mv -f "$note_tmp" "$note"
