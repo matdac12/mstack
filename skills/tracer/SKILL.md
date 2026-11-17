@@ -98,7 +98,7 @@ After a compaction or a resumed summary, re-read this file, workers.md, merge.md
 
 After preflight, read `~/.t3/handoffs/<repo name>/close-of-day.md` if it exists: the note the close-the-day skill left where the last session stopped. Then run `git fetch origin`, and read the open and in-progress issues, `t3_thread_list`, `git status`, `git worktree list` (and on any reachable linked machine over SSH: `git -C <root> worktree list`), unmerged branches and unpushed commits (`git log --oneline origin/<defaultBranch>..<defaultBranch>`). Show Mattia a short picture plus what looks next, and ask what he wants (or start the loop with the goal he gave). Never invent work.
 - Git beats tracker status and the close-of-day note: check tags and `git branch --merged` before calling anything ready or done.
-- Unpushed commits stay a standing line in every status until pushed: on some projects a push is a production deploy, and work left unpushed for days surprises everyone.
+- List unpushed commits in every status until pushed; on some projects, pushing deploys to production.
 - Another orchestrator's threads on the same repo: name them, leave them alone, keep your merges off their branches. The session a close-of-day note marks finished is not one: its work is yours now.
 - An issue key from another project: confirm in one line before acting on it.
 
@@ -115,7 +115,7 @@ Keep the work map up to date; it drives every spawn.
 
 - Status: the worker sets only In Progress. **You** set In Review (execute, implement or fix work committed and reported), blocked, and Done. A design task stays In Progress through its execution. If a worker set another status, correct it. No "blocked" status? Comment and use a label that already exists.
 - **Done** means merged, verified green, and hand-checked when the change needs a **hand check** (UI or app behaviour, or the project's AGENTS.md asks for one). Until Mattia confirms it, the issue stays In Review with a "hand check owed" comment holding the by-eye checklist: In Review is his list of things to check. Backend or test-only work goes Done at merge.
-- **Every report is written to the tracker before you answer Mattia:** status, plus a short comment (what changed, branch and commit, test results, the by-eye checklist, what was not verified, open decisions). Do not rely on the worker having done it.
+- **Before answering Mattia, record every report in the tracker:** status and a short comment with changes, branch and commit, test results, hand-check checklist, unverified items and open decisions. Do not rely on the worker having done it.
 - Record each decision Mattia makes, and each grant, as a tracker comment, so workers do not re-ask.
 - Findings a worker did not fix go on one follow-up issue per task (append to it); a new top-level issue only with Mattia's OK. Delete only when he says so.
 - **Tracker knowledge:** read relevant project memories and documents before planning or briefing workers. After a task lands, record durable facts and lessons; update existing memories instead of adding near-duplicates. Traccia tools: trackers.md.
@@ -136,5 +136,5 @@ Keep the work map up to date; it drives every spawn.
 - Each step: status in about 8 lines at most, a recommendation, at most 2 numbered questions.
 - Answer his question first, before anything else, including going back to waiting.
 - **When he comes back** (from away mode, a break, or after a batch of reports), the first line says what waits on him, or that nothing does. Then one line per call he can answer by voice: the call, your pick, what it changes for him, the risk. Group calls with the same answer ("merge all three? I'd say yes; the riskiest is TRC-161") so "all yes" works. Then what happened, in a few plain lines, with no SHAs or counts unless he needs one to act. List only calls that are really his.
-- Hand checks go one step at a time: give a step, he answers, confirm it from logs or history where you can, then give the next. Long lists get lost or half-done. Batching them at the end is his call.
+- Guide hand checks one step at a time: give a step, wait for his answer, confirm from logs or history where possible, then continue. Mattia decides whether to batch checks at the end.
 - His attention for hand checks is the bottleneck, not the agents. Asked "should we spawn more?", "wait" is a fine answer.
