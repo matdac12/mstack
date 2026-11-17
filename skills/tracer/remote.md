@@ -19,7 +19,7 @@ Keep on Windows only: orchestration, Windows-specific apps, and tasks that direc
 
 ## Proposing
 
-- **At his desk:** before the first spawn, propose running the session's development workers on the reachable Linux machine in one line ("`omarchy-mac` is reachable; run the coding and test workers there and keep merges/hand checks here?"). Once Mattia says yes (or states his split for the session, such as "develop on Linux, visual check here"), record it as a tracker comment: **it holds for the rest of the session and passes to every sub-tracer you launch**, so you do not re-ask per ticket.
+- **At his desk:** before the first spawn, propose running the session's development workers on the reachable Linux machine in one line ("The Linux box is reachable; run the coding and test workers there and keep merges/hand checks here?"). Once Mattia says yes (or states his split for the session, such as "develop on Linux, visual check here"), record it as a tracker comment: **it holds for the rest of the session and passes to every sub-tracer you launch**, so you do not re-ask per ticket.
 - Name in the same line anything in the way: a provider you would pick is missing there, or the repo is not cloned there yet (offer to clone it).
 - **Away mode:** you decide (defaulting to the reachable Linux build machine for code, builds and tests), and your summary says what ran where. Anything in the way is parked (SKILL.md, Away mode).
 - Never anything silently: a failed launch or sync, a missing provider, a machine that drops mid-task. Tell Mattia; he fixes it.
