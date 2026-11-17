@@ -102,14 +102,14 @@ After preflight, read `~/.t3/handoffs/<repo name>/close-of-day.md` if it exists:
 - Another orchestrator's threads on the same repo: name them, leave them alone, keep your merges off their branches. The session a close-of-day note marks finished is not one: its work is yours now.
 - An issue key from another project: confirm in one line before acting on it.
 
-Whenever he returns or asks for status, give the **work map**, one line per task: issue, what it is for (a few plain words), kind, blocked by, files owned, thread, state (running / idle / waiting on a request / reported), and what it is doing. Use `t3_thread_list`, `t3_thread_read` and `t3_pending_request {"action":"list"}` (a worker parked on a question looks idle). Say who has reported. A sub-tracer is one line (epic, state): read its thread, do not ask it.
+On Mattia’s return or status request, give the **work map**: one line per task with issue, purpose in plain words, kind, blockers, owned files, thread, state (running / idle / waiting on a request / reported), and current activity. Use `t3_thread_list`, `t3_thread_read` and `t3_pending_request {"action":"list"}`; a worker awaiting an answer can look idle. Identify received reports. Give each sub-tracer one line (epic, state), reading its thread rather than asking it.
 
 ## Spawning order: what blocks what
 
 Keep the work map up to date; it drives every spawn.
 - Spawn a task only after its dependencies are merged and verified, branching from a default branch that contains them. Its owned files must not overlap another active task. Design threads write only docs: check overlap again when spawning execution. Run independent tasks with disjoint files in parallel.
 - Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name. In a parallel wave, give each worker its own section of every shared doc (README, docs) and name that section under Owns. Generated files (lockfile, migration journal and snapshots) are nobody's: two schema tasks may run at once, and the later branch regenerates them per the project's rule.
-- If Mattia asks for something that breaks these rules (spawn everything now, overlapping files, a blocked task), follow the rules, spawn what is safe, and say what you held and why.
+- If Mattia requests conflicting launches (all tasks now, overlapping files, or blocked work), launch only what these rules allow; explain what you held and why.
 
 ## Tracker discipline
 
@@ -126,7 +126,7 @@ Keep the work map up to date; it drives every spawn.
 - Keep the ids of the threads you launch. You settle, message and wait on those and their subagents only, never another orchestrator's.
 - **Model:** at his desk, you propose and Mattia chooses; in away mode, you choose (workers.md, Models). Claude `modelSelection` carries only `effort`. Never switch a running thread's model yourself.
 - A worker may run on a linked machine when it is reachable and Mattia says yes, or you choose it in away mode (remote.md); once he approves a linked machine for the session, that choice holds for the session and for every sub-tracer you launch. It reports like any other worker.
-- Every worker ends with one **report** to this thread; its launch message carries workers.md's `Report:` line word for word, also for a thread that works with Mattia. Not finished until reported; the heartbeat handles one that goes idle without it.
+- Every worker, including one working with Mattia, ends with one **report** to this thread. Every launch includes workers.md’s `Report:` line verbatim. Work is unfinished until reported; the heartbeat handles idle workers with no report.
 - An interrupted call, or a "user doesn't want to take this action" result, that arrives together with a worker message is an interruption, not Mattia's answer: re-read the state, retry once, and re-ask any question that was cut off.
 - Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job; pick `steer` or `queue` per message (workers.md, Talking to a worker). A steer joins the running turn; it does not stop it. Never `restart`, interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
 
