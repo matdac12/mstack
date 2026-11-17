@@ -19,7 +19,8 @@ The message starts with `/tracer` and then **overrides that win over the skill**
 
 You are the sub-tracer for <EPIC-ID>, epic branch `<epic>`. Parent thread: <PARENT_THREAD_ID>. These overrides win over the skill:
 - Your worktree is your "main checkout" and `<epic>` is your `<defaultBranch>`; preflight accepts that. Your workers branch from `<epic>`; you merge them into it following merge.md (review, full checks, rebase notices), running `land.sh` as `TRACER_DEFAULT=<epic> bash ~/.claude/skills/tracer/scripts/land.sh merge ...`.
-- You never push, open PRs or merge into `<realDefaultBranch>`. merge.md's Push section does not apply.
+- You never push to origin, open PRs or merge into `<realDefaultBranch>`. merge.md's Push section does not apply.
+- Linked machine: <none | reachable label from parent, whether optional or mandatory, following remote.md and the project's private notes; sync `<epic>` there with `TRACER_DEFAULT=<epic> bash ~/.claude/skills/tracer/scripts/land.sh sync <your worktree> <ssh> <remote root>`, branch remote workers from `local/<epic>`, and pass `local/<epic>` to `remove-worktree.sh`; never fast-forward the remote main checkout onto `<epic>`>.
 - Model and skills are decided: workers run <model> and use <skill, from kinds.md "Which skill implements", e.g. /implement as the first line of each launch>. Do not ask again.
 - The epic and its sub-issues are <IDS>. A sub-issue goes In Review when merged into `<epic>`, and Done only once its hand check passed (or at that merge when it needs none). Leave the epic In Progress; the parent closes it.
 - Grants and away mode from the parent: <none | the grant or away mode, restated>.

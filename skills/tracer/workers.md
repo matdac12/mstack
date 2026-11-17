@@ -83,6 +83,7 @@ A fresh install in every worktree repeats identical work, so the main checkout's
 - `git -C <repo>` instead of `cd` in compound commands: a `cd` moves the session's working directory.
 - `robocopy` from Git Bash: prefix `MSYS_NO_PATHCONV=1`, or `/E` is mangled, and pass Windows paths (`$(cygpath -w <path>)`): with `/c/...` paths it fails with exit 16, which is easy to miss.
 - PowerShell from bash: wrap the command in single quotes so bash does not expand `$env:...`; build paths with `Join-Path $env:APPDATA ...`.
+- **Commands you give Mattia to run on Windows:** his terminal is PowerShell, not Git Bash. Write valid PowerShell: `$HOME` instead of unquoted `~` (`& "$env:ProgramFiles\Git\bin\bash.exe" "$HOME/.claude/skills/tracer/scripts/cleanup-task.sh" ...`), `taskkill /T /F /PID <pid>` with single slashes (never `//T //F`), and `$root = "..."` instead of `ROOT="..."`.
 - **Wildcards:** `settings.json.*` also matches `settings.json` (a trailing `.*` matches an empty extension). That deleted a live settings file with API keys. List the exact matches before deleting, or name each file.
 - **A running app locks its exe:** a release build into the same target dir fails at the final copy ("Access denied, os error 5"), and `| tail` can hide it. Stop the app, build, restart it, check the exe timestamp.
 - A denied `rm` or a blocked command: do not retry the same thing; ask Mattia.
@@ -92,6 +93,7 @@ A fresh install in every worktree repeats identical work, so the main checkout's
 Workers share Mattia's laptop, often while he is using it.
 - **One lock**, handed out by you to one worker at a time: timed runs, anything that stops, swaps or drives his apps, GUI tests. Grant it by message; the worker waits for your message instead of polling. While a timed run holds it, launch no build worker and run no build yourself. The project's AGENTS.md may name a lock file.
 - Workers stop only processes they started, by PID or process tree (`taskkill /T /PID <pid>`); never by image name (`node`, `cargo`).
+- Throwaway test containers (such as Postgres) and test servers (yours and every worker's) must bind a unique or ephemeral loopback port (`127.0.0.1:0`) and a unique container name, and be removed when the run finishes, so parallel runs never share a database or port.
 - Synthetic keystrokes and clicks go only to the test app's own window, never to whatever has focus.
 - With other workers active, throttle test runners (`--maxWorkers=4` for vitest or jest).
 - Swapping his running app: check which exe runs before stopping it; back up its settings and restore them byte-identical; restart his normal app from its usual shortcut; report the final machine state truthfully.

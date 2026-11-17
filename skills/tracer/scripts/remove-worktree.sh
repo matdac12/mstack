@@ -81,17 +81,21 @@ git -C "$repo" worktree prune
 
 git -C "$repo" show-ref --verify --quiet "refs/heads/$branch" || exit 0
 # `branch -d` checks against the checked-out branch. On a linked machine that
-# is behind `local/<defaultBranch>`, so fast-forward it first when it is clean.
+# is behind `local/<defaultBranch>`, so fast-forward it first when it is clean
+# and <base-ref> is that same default branch (never an epic or feature branch).
 head=$(git -C "$repo" symbolic-ref --short HEAD 2>/dev/null)
-if [ -n "$head" ] && [ "$(git -C "$repo" rev-parse HEAD)" != "$(git -C "$repo" rev-parse "$base")" ] \
+if [ -n "$head" ] && { [ "$base" = "$head" ] || [ "$base" = "local/$head" ]; } \
+  && [ "$(git -C "$repo" rev-parse HEAD)" != "$(git -C "$repo" rev-parse "$base")" ] \
   && [ -z "$(git -C "$repo" status --porcelain --untracked-files=no)" ]; then
   git -C "$repo" merge --ff-only -q "$base" 2>/dev/null && echo "fast-forwarded $head to $base"
 fi
-if [ "$force" = 1 ] && ! git -C "$repo" merge-base --is-ancestor "$branch" "$base" 2>/dev/null; then
+if ! git -C "$repo" merge-base --is-ancestor "$branch" "$base" 2>/dev/null; then
+  [ "$force" = 1 ] || refuse "$branch not deleted: not merged into $base"
   tip=$(git -C "$repo" rev-parse "$branch")
   git -C "$repo" branch -D "$branch" >/dev/null || refuse "could not delete $branch"
   echo "deleted unmerged branch $branch (tip $tip; restore: git branch $branch $tip)"
   exit 0
 fi
-git -C "$repo" branch -d "$branch" >/dev/null 2>&1 && echo "deleted branch $branch" \
-  || refuse "$branch not deleted: not merged into $head"
+{ git -C "$repo" branch -d "$branch" >/dev/null 2>&1 || git -C "$repo" branch -D "$branch" >/dev/null 2>&1; } \
+  && echo "deleted branch $branch" \
+  || refuse "could not delete $branch"
