@@ -13,14 +13,28 @@
 #   Existing files in the worktree are kept. Env contents are never printed.
 #   The outcome goes to <git-dir>/tracer-seed, which the worker reads. The
 #   file appears only when seeding is done (written elsewhere, then renamed
-#   into place), so its absence means "still running: wait, do not install".
+#   into place), so its absence means "outcome unknown: do not install; check the seed process".
 # Exit 0 seeded, 1 failed, 2 usage.
 set -euo pipefail
 
 [ $# -eq 1 ] || { sed -n '2,17p' "$0"; exit 2; }
 wt=$1
 note=""; note_tmp=""
-trap '[ -n "$note_tmp" ] && rm -f "$note_tmp"' EXIT
+finish() {
+  rc=$?
+  trap - EXIT
+  if [ "$rc" -ne 0 ] && [ -n "$note_tmp" ]; then
+    # Replace progress with a terminal state, including unexpected set -e exits.
+    printf 'seed failed: exit %s; report to the orchestrator before installing\n' "$rc" > "$note_tmp" \
+      && mv -f "$note_tmp" "$note" \
+      || echo "seed failed: could not publish outcome; report this exit" >&2
+  fi
+  [ -z "$note_tmp" ] || rm -f "$note_tmp"
+  exit "$rc"
+}
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 fail() {
   echo "seed failed: $*" >&2
   if [ -n "$note_tmp" ]; then

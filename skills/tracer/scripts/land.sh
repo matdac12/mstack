@@ -43,7 +43,7 @@ merge)
   want=$(git -C "$repo" rev-parse -q --verify "$sha^{commit}") || stop "unknown commit $sha"
   have=$(git -C "$repo" rev-parse -q --verify "$ref^{commit}") || stop "no branch $ref"
   [ "$have" = "$want" ] || stop "$ref is at ${have:0:12}, you reviewed ${want:0:12}: review the new commits first"
-  bash "$(dirname "$0")/leak-check.sh" "$repo" "$default..$ref" \
+  bash "$(dirname "$0")/leak-check.sh" "$repo" --message-file "$msg" "$default..$ref" \
     || stop "leak check failed on $branch; rewrite the branch before merging"
   before=$(git -C "$repo" rev-parse HEAD)
   if ! git -C "$repo" merge -q --no-ff -F "$msg" "$ref"; then
@@ -64,10 +64,27 @@ sync)
 drop-remote-ref)
   [ $# -eq 6 ] || usage
   ssh=$3; root=$4; branch=$5; into=$6
-  ssh "$ssh" "git -C '$root' merge-base --is-ancestor 'refs/heads/$branch' '$into'" 2>/dev/null \
-    || stop "$branch is not merged into $into on $ssh"
-  ssh "$ssh" "git -C '$root' update-ref -d 'refs/heads/$branch'" \
-    || stop "could not delete $branch on $ssh"
+  case "$branch" in local/?*) ;; *) stop "only local/ helper refs may be removed" ;; esac
+  git check-ref-format "refs/heads/$branch" || stop "invalid helper ref"
+  git check-ref-format "refs/heads/$into" || stop "merged-into must be a branch"
+  # Single-quoted remote arguments must not contain shell quotes.
+  case "$root$branch$into" in *"'"*) stop "unsupported quote in remote arguments" ;; esac
+  ssh "$ssh" "bash -s -- '$root' '$branch' '$into'" <<'REMOTE' \
+    || stop "remote helper ref cleanup refused"
+set -eu
+root=$1; branch=$2; into=$3
+ref="refs/heads/$branch"
+[ "$branch" != "$into" ] || { echo "cannot delete the merge target"; exit 1; }
+tip=$(git -C "$root" rev-parse --verify "$ref")
+base=$(git -C "$root" rev-parse --verify "refs/heads/$into")
+git -C "$root" merge-base --is-ancestor "$tip" "$base"
+worktrees=$(git -C "$root" worktree list --porcelain)
+if printf '%s\n' "$worktrees" | grep -qxF "branch $ref"; then
+  echo "helper ref is checked out in a worktree"; exit 1
+fi
+# Compare-and-delete refuses a tip advanced since the ancestry check.
+git -C "$root" update-ref -d "$ref" "$tip"
+REMOTE
   echo "deleted merged ref $branch on $ssh (merged into $into)"
   ;;
 *) usage ;;

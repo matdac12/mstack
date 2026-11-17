@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Scan commits about to leave this machine for secrets and private names.
-# Usage: leak-check.sh <repo-root> <rev-range...>   e.g. origin/main..main
+# Usage: leak-check.sh <repo-root> [--message-file <path>] <rev-range...>   e.g. origin/main..main
 # Looks for: secret-looking values from the repo's untracked .env* files
 # (keys naming a KEY, SECRET, TOKEN, PASS(WORD), DATABASE_URL or DSN), the
 # machine names in ~/.t3/machines.md (any case), any line in
@@ -11,9 +11,14 @@
 # is, never the value.
 # Exit 0 clean, 1 hits, 2 usage error. Run it as its own command, never
 # chained with the push.
-set -u
+set -uo pipefail
 
 repo=${1:?repo root}; shift
+message_file=""
+if [ "${1:-}" = "--message-file" ]; then
+  [ $# -ge 3 ] && [ -f "$2" ] || { echo "missing message file or revision range"; exit 2; }
+  message_file=$2; shift 2
+fi
 [ $# -gt 0 ] || { echo "usage: leak-check.sh <repo-root> <rev-range...>"; exit 2; }
 git -C "$repo" rev-parse -q --verify HEAD >/dev/null || { echo "not a repo: $repo"; exit 2; }
 
@@ -80,13 +85,26 @@ if [ ! -f "$main/tools.json" ] && [ ! -f "$(dirname "$main")/tools.json" ]; then
   printf 'client-repo regex (refs/heads/local/)\trefs/heads/local/\n'
 fi >> "$pat"
 proj_keys=$(git -C "$repo" config --get tracer.projectKeys || true)
+if [ "$client_repo" = 1 ]; then
+  [ -n "$proj_keys" ] || { echo "configure tracer.projectKeys with the tracker project prefixes before scanning a client repo"; exit 2; }
+  [[ "$proj_keys" =~ [A-Za-z] ]] || { echo "empty tracer.projectKeys prefixes"; exit 2; }
+  for key in $proj_keys; do
+    [[ "$key" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]] || { echo "invalid tracer.projectKeys prefix"; exit 2; }
+  done
+fi
+# Validate ranges first: a failed git log must never turn into a clean scan.
+git -C "$repo" rev-list "$@" >/dev/null || exit 2
 
 n=$(wc -l < "$pat")
 [ "$n" -gt 0 ] || echo "warning: no patterns found (no .env values, machines.md or leak-patterns.txt)"
 
 hits=$(
-  { git -C "$repo" log -p --no-color --no-ext-diff --format='commit %H' "$@"
-    git -C "$repo" log --format='commit %H%nmessage%n%B' "$@" | sed '/^commit /!{/^message$/!s/^/+/}'
+  { git -C "$repo" log -p --no-color --no-ext-diff --format='commit %H' "$@" || exit 2
+    git -C "$repo" log --format='commit %H%nmessage%n%B' "$@" | sed '/^commit /!{/^message$/!s/^/+/}' || exit 2
+    if [ -n "$message_file" ]; then
+      printf 'commit pending\nmessage\n'
+      sed 's/^/+/' "$message_file" || exit 2
+    fi
   } | awk -F'\t' -v pf="$pat" -v keys="$proj_keys" -v client="$client_repo" '
     BEGIN {
       while ((getline l < pf) > 0) { i = index(l, "\t"); lab[++k] = substr(l, 1, i-1); val[k] = substr(l, i+1) }
@@ -109,7 +127,7 @@ hits=$(
               }
             } }
   ' | sort -u
-)
+) || { echo 'leak scan failed; nothing was verified'; exit 2; }
 
 commits=$(git -C "$repo" rev-list --count "$@" 2>/dev/null || echo "?")
 if [ -n "$hits" ]; then
