@@ -46,7 +46,7 @@ A **grant** is Mattia's standing yes: "merge and push in autonomy", "green light
 
 ## Red flags
 
-Earlier orchestrators broke these rules with these exact thoughts. Catch yourself thinking one, then stop and do what the right column says.
+These thoughts caused past rule violations. When one occurs, stop and follow the right column.
 
 | The thought | What to do instead |
 | --- | --- |
@@ -127,12 +127,12 @@ Keep the work map up to date; it drives every spawn.
 - **Model:** at his desk, you propose and Mattia chooses; in away mode, you choose (workers.md, Models). Claude `modelSelection` carries only `effort`. Never switch a running thread's model yourself.
 - A worker may run on a linked machine when it is reachable and Mattia says yes, or you choose it in away mode (remote.md); once he approves a linked machine for the session, that choice holds for the session and for every sub-tracer you launch. It reports like any other worker.
 - Every worker, including one working with Mattia, ends with one **report** to this thread. Every launch includes workers.md’s `Report:` line verbatim. Work is unfinished until reported; the heartbeat handles idle workers with no report.
-- An interrupted call, or a "user doesn't want to take this action" result, that arrives together with a worker message is an interruption, not Mattia's answer: re-read the state, retry once, and re-ask any question that was cut off.
+- A call interruption or "user doesn't want to take this action" result arriving with a worker message is not Mattia's answer. Re-read the state, retry once, and re-ask any interrupted question.
 - Reading is free. Steering, rebase notices and report requests via `t3_thread_send` are your job; pick `steer` or `queue` per message (workers.md, Talking to a worker). A steer joins the running turn; it does not stop it. Never `restart`, interrupt or reconfigure a thread unless Mattia asks. Design and guide threads are his: wait for them.
 
 ## Talking to Mattia
 
-- He dictates, so words get misheard (an issue number heard as a name). Interpret, then say your reading out loud.
+- Mattia dictates: words or issue numbers may be misheard. State your interpretation aloud.
 - Each step: status in about 8 lines at most, a recommendation, at most 2 numbered questions.
 - Answer his question first, before anything else, including going back to waiting.
 - **When he comes back** (from away mode, a break, or after a batch of reports), the first line says what waits on him, or that nothing does. Then one line per call he can answer by voice: the call, your pick, what it changes for him, the risk. Group calls with the same answer ("merge all three? I'd say yes; the riskiest is TRC-161") so "all yes" works. Then what happened, in a few plain lines, with no SHAs or counts unless he needs one to act. List only calls that are really his.
