@@ -4,8 +4,10 @@
 #   Run right after the launch that creates the worktree: waits up to
 #   SEED_WAIT seconds (default 120) for it. Then, from the main checkout:
 #   - .claude/settings.local.json when the project has a .mcp.json;
-#   - untracked .env* files at the same relative paths, each made ignored there;
-#   - the installed dependency directory when the lockfile is byte-identical,
+#   - untracked .env* files and mise.local.toml at the same relative paths,
+#     each made ignored there (and mise.local.toml trusted when mise exists);
+#   - the installed dependency directory (at the repo root and in 1-level
+#     subfolders such as frontend/) when the lockfile is byte-identical,
 #     then the project's verify (`git config tracer.depsVerify`, else the
 #     ecosystem's own); a failed verify removes the copy.
 #   Existing files in the worktree are kept. Env contents are never printed.
@@ -65,9 +67,12 @@ while IFS= read -r f; do
     echo "/$f" >> "$exclude"
     say "env: $f was not ignored in the worktree; added to info/exclude"
   fi
-done < <(git -C "$main" ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$' || true)
+done < <(git -C "$main" ls-files -oi --exclude-standard --directory | grep -E '(^|/)(\.env[^/]*|mise\.local\.toml)$' || true)
+if [ -f "$wt/mise.local.toml" ] && command -v mise >/dev/null 2>&1; then
+  mise trust -q "$wt/mise.local.toml" >/dev/null 2>&1 || true
+fi
 
-# Dependencies: lockfile, installed directory, default verify.
+# Dependencies: lockfile, installed directory, default verify (root and 1-level subfolders).
 deps() {
   case $1 in
     package-lock.json)
@@ -78,36 +83,49 @@ deps() {
     composer.lock)  echo "vendor|composer validate --no-check-publish" ;;
   esac
 }
-for lock in package-lock.json pnpm-lock.yaml yarn.lock composer.lock; do
-  [ -f "$main/$lock" ] || continue
-  spec=$(deps "$lock"); dir=${spec%%|*}
-  verify=$(git -C "$main" config --get tracer.depsVerify || echo "${spec#*|}")
-  if ! cmp -s "$main/$lock" "$wt/$lock"; then
-    say "$dir: left to the worker ($lock differs from the main checkout's)"
-  elif [ ! -d "$main/$dir" ]; then
-    say "$dir: left to the worker (the main checkout has no $dir)"
-  elif [ -e "$wt/$dir" ]; then
-    say "$dir: kept the existing one"
-  else
-    tmp="$wt/.$dir.seeding"
-    rm -rf -- "$tmp"
-    if [ "$win" = 1 ]; then
-      rc=0; MSYS_NO_PATHCONV=1 robocopy "$(cygpath -w "$main/$dir")" "$(cygpath -w "$tmp")" /E /MT:16 /NFL /NDL /NJH /NJS /NP >/dev/null || rc=$?
-      [ "$rc" -lt 8 ] || { rm -rf -- "$tmp"; fail "robocopy of $dir failed (exit $rc)"; }
-    else
-      cp -a "$main/$dir" "$tmp" || { rm -rf -- "$tmp"; fail "copy of $dir failed"; }
-    fi
-    # Renamed into place in one step, so a worker never sees half a copy.
-    mv -T "$tmp" "$wt/$dir" 2>/dev/null || { rm -rf -- "$tmp"; fail "$wt/$dir appeared during the copy"; }
-    if (cd "$wt" && sh -c "$verify") >/dev/null 2>&1; then
-      say "$dir: copied from the main checkout, verified ($verify)"
-    else
-      rm -rf -- "${wt:?}/$dir"
-      say "$dir: left to the worker (the copy failed '$verify' and was removed)"
-    fi
-    # A verify that only rewrote lockfile metadata is not a change.
-    git -C "$wt" diff --quiet -- "$lock" || { git -C "$wt" checkout -q -- "$lock"; say "$lock: restored after the verify rewrote it"; }
+seed_dir() {
+  local sub=$1 mdir="$main" wdir="$wt" pfx="" lock spec dir verify tmp rc
+  if [ "$sub" != "." ]; then
+    mdir="$main/$sub"; wdir="$wt/$sub"; pfx="$sub/"
   fi
-  break
+  [ -d "$mdir" ] && [ -d "$wdir" ] || return 0
+  for lock in package-lock.json pnpm-lock.yaml yarn.lock composer.lock; do
+    [ -f "$mdir/$lock" ] || continue
+    spec=$(deps "$lock"); dir=${spec%%|*}
+    verify=$(git -C "$main" config --get tracer.depsVerify || echo "${spec#*|}")
+    if ! cmp -s "$mdir/$lock" "$wdir/$lock"; then
+      say "${pfx}${dir}: left to the worker (${pfx}${lock} differs from the main checkout's)"
+    elif [ ! -d "$mdir/$dir" ]; then
+      say "${pfx}${dir}: left to the worker (the main checkout has no ${pfx}${dir})"
+    elif [ -e "$wdir/$dir" ]; then
+      say "${pfx}${dir}: kept the existing one"
+    else
+      tmp="$wdir/.$dir.seeding"
+      rm -rf -- "$tmp"
+      if [ "$win" = 1 ]; then
+        rc=0; MSYS_NO_PATHCONV=1 robocopy "$(cygpath -w "$mdir/$dir")" "$(cygpath -w "$tmp")" /E /MT:16 /NFL /NDL /NJH /NJS /NP >/dev/null || rc=$?
+        [ "$rc" -lt 8 ] || { rm -rf -- "$tmp"; fail "robocopy of ${pfx}${dir} failed (exit $rc)"; }
+      else
+        { cp -a --reflink=auto "$mdir/$dir" "$tmp" 2>/dev/null || cp -a "$mdir/$dir" "$tmp"; } \
+          || { rm -rf -- "$tmp"; fail "copy of ${pfx}${dir} failed"; }
+      fi
+      # Renamed into place in one step, so a worker never sees half a copy.
+      mv -T "$tmp" "$wdir/$dir" 2>/dev/null || { rm -rf -- "$tmp"; fail "$wdir/$dir appeared during the copy"; }
+      if (cd "$wdir" && sh -c "$verify") >/dev/null 2>&1; then
+        say "${pfx}${dir}: copied from the main checkout, verified ($verify)"
+      else
+        rm -rf -- "${wdir:?}/$dir"
+        say "${pfx}${dir}: left to the worker (the copy failed '$verify' and was removed)"
+      fi
+      # A verify that only rewrote lockfile metadata is not a change.
+      git -C "$wt" diff --quiet -- "${pfx}${lock}" || { git -C "$wt" checkout -q -- "${pfx}${lock}"; say "${pfx}${lock}: restored after the verify rewrote it"; }
+    fi
+    break
+  done
+}
+seed_dir "."
+for sub in $(cd "$main" && for d in */; do [ -d "$d" ] && echo "${d%/}"; done); do
+  case $sub in .*|node_modules|vendor|venv|.venv|target|dist|build) continue ;; esac
+  seed_dir "$sub"
 done
 say "seed done"

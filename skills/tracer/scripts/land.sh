@@ -6,14 +6,18 @@
 #     the linked machine into refs/remotes/<label>/<branch>; checks it is the
 #     reviewed commit; merges --no-ff with the message file. On conflicts it
 #     aborts the merge. A fetched ref is deleted once merged.
-#   land.sh sync <repo-root> <ssh> <remote-root>
-#     Pushes the default branch to local/<default> there (never forced).
+#   land.sh sync <repo-root> <ssh> <remote-root> [<branch>]
+#     Pushes <branch> (default: the default branch) to local/<branch> there
+#     (never forced).
+#   land.sh drop-remote-ref <repo-root> <ssh> <remote-root> <branch> <merged-into>
+#     Deletes refs/heads/<branch> (such as local/<epic>) on <ssh>:<remote-root>
+#     once it is merged into <merged-into> there.
 # TRACER_DEFAULT=<branch> overrides the default branch (a sub-tracer's epic).
 # Verifying the merged result stays yours. Exit 0 done, 1 stopped, 2 usage.
 set -u
 
 stop() { echo "stopped: $*"; exit 1; }
-usage() { sed -n '2,11p' "$0"; exit 2; }
+usage() { sed -n '2,14p' "$0"; exit 2; }
 
 cmd=${1:-}; repo=${2:-}
 [ -n "$cmd" ] && [ -n "$repo" ] || usage
@@ -48,11 +52,20 @@ merge)
   [ "$ref" = "$branch" ] || { git -C "$repo" update-ref -d "$ref" && echo "deleted fetched ref $ref"; }
   ;;
 sync)
-  [ $# -eq 4 ] || usage
-  ssh=$3; root=$4
-  git -C "$repo" push -q "$ssh:$root" "$default:refs/heads/local/$default" \
-    || stop "sync rejected: local/$default there moved; ask Mattia, never force it"
-  echo "synced $default ($(git -C "$repo" rev-parse --short=12 "$default")) to local/$default on $ssh"
+  [ $# -eq 4 ] || [ $# -eq 5 ] || usage
+  ssh=$3; root=$4; b=${5:-$default}
+  git -C "$repo" push -q "$ssh:$root" "$b:refs/heads/local/$b" \
+    || stop "sync rejected: local/$b there moved; ask Mattia, never force it"
+  echo "synced $b ($(git -C "$repo" rev-parse --short=12 "$b")) to local/$b on $ssh"
+  ;;
+drop-remote-ref)
+  [ $# -eq 6 ] || usage
+  ssh=$3; root=$4; branch=$5; into=$6
+  ssh "$ssh" "git -C '$root' merge-base --is-ancestor 'refs/heads/$branch' '$into'" 2>/dev/null \
+    || stop "$branch is not merged into $into on $ssh"
+  ssh "$ssh" "git -C '$root' update-ref -d 'refs/heads/$branch'" \
+    || stop "could not delete $branch on $ssh"
+  echo "deleted merged ref $branch on $ssh (merged into $into)"
   ;;
 *) usage ;;
 esac

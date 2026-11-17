@@ -1,27 +1,27 @@
 # Remote machines
 
-Linked T3 environments are Mattia's other machines. They are optional: an extension of this machine for heavy work, not a second orchestrator. Planning, review, merge and every push to origin stay with you, here. What each machine is good at, its SSH target and where its repos live: `~/.t3/machines.md`, private and local. Its names (labels, host names, `local/<defaultBranch>`) stay out of every tracked file, commit message and tracker issue text: they mean nothing to anyone else. merge.md's leak check catches the host names.
+Linked T3 environments are Mattia's other machines. A reachable Linux build machine is the **default recommendation** for development (coding workers, builds, `npm ci`, full test suites, Docker and throwaway Postgres containers, E2E runs, big refactors) so work stays off Windows whenever possible. Planning, review, merge and every push to origin stay with you, here, along with tasks that need Windows-only apps or local-only resources (MCPs, `.env` secrets, production DB or client data that the project's private notes keep on Windows). What each machine is good at, its SSH target and where its repos live: `~/.t3/machines.md`, private and local. Its names (labels, host names, `local/<defaultBranch>`), local setup and personal skills stay out of every tracked file (`CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/**`), commit message and tracker issue text: they mean nothing to anyone else. merge.md's leak check catches the host names.
 
 ## When
 
-Propose a linked machine for:
-- Machine-heavy or long work: full builds, test suites, CI-style and Docker runs, E2E runs, dependency-heavy installs, big refactors.
+Recommend the reachable Linux build machine by default for:
+- Coding workers, refactors, full builds, test suites, CI-style and Docker runs, E2E runs, dependency-heavy installs.
 - Reproducing a bug Mattia only sees on that machine.
-- A dev server running somewhere Mattia can open a URL for a hand check.
+- A dev server running somewhere Mattia can open a URL for a hand check (unless the hand check needs real client data that stays on Windows; then code and tests run on Linux and the hand check runs here after fetch/merge).
 
-Anything else runs here, as usual. A hand check never keeps work off a linked machine: the preview reaches Mattia as a tailnet link (Previews).
+Keep on Windows only: orchestration, Windows-specific apps, and tasks that directly read or write resources kept only on Windows (such as production credentials, `.env` secrets, client data in `experiments/`, or Windows-only MCPs). A hand check without restricted client data never keeps work off a linked machine: the preview reaches Mattia as a tailnet link (Previews).
 
 ## Checking it
 
-- Preflight calls `t3_environment_links` once and keeps label → `environmentId`. Check again, silently, right before each proposal.
+- Preflight calls `t3_environment_links` once and keeps label → `environmentId`. Check again, silently, right before each launch or proposal.
 - Resolve a machine by its label every session. Never hardcode or save an id: re-linking changes it.
 - Not `reachable` (expired, unreachable), or no SSH target in machines.md: say nothing, propose nothing, run the work here. Never work around it.
 
 ## Proposing
 
-- At his desk, Mattia decides. Reachable and the task fits: propose it in one line with the reason, taken from machines.md ("TRC-160 runs the Docker E2E suite; the Linux box does that faster. Run it there?").
+- **At his desk:** before the first spawn, propose running the session's development workers on the reachable Linux machine in one line ("`omarchy-mac` is reachable; run the coding and test workers there and keep merges/hand checks here?"). Once Mattia says yes (or states his split for the session, such as "develop on Linux, visual check here"), record it as a tracker comment: **it holds for the rest of the session and passes to every sub-tracer you launch**, so you do not re-ask per ticket.
 - Name in the same line anything in the way: a provider you would pick is missing there, or the repo is not cloned there yet (offer to clone it).
-- Away mode: you decide, and your summary says what ran where. Anything in the way is parked (SKILL.md, Away mode).
+- **Away mode:** you decide (defaulting to the reachable Linux build machine for code, builds and tests), and your summary says what ran where. Anything in the way is parked (SKILL.md, Away mode).
 - Never anything silently: a failed launch or sync, a missing provider, a machine that drops mid-task. Tell Mattia; he fixes it.
 
 ## Reaching it
@@ -38,9 +38,9 @@ Anything else runs here, as usual. A hand check never keeps work off a linked ma
 ## Before each launch
 
 Code and files move over SSH (`<ssh>` and `<root>`: machines.md and the project's `workspaceRoot`), never through origin. Any step failing: stop and tell Mattia.
-1. Sync your `<defaultBranch>`, as its own command: `bash ~/.claude/skills/tracer/scripts/land.sh sync <repo root> <ssh> <root>` (a `git push` to `local/<defaultBranch>` there, never forced; for a feature or sub-tracer epic branch `<epic>`, prefix `TRACER_DEFAULT=<epic>`, which pushes to `local/<epic>`). This is a sync, not a publish: no yes needed, unpushed commits included. Rejected: something moved `local/<defaultBranch>` there; stop and ask Mattia. When syncing the repo's real default branch and the sync brought a lockfile change, fast-forward that machine's main checkout (`merge --ff-only local/<defaultBranch>`, only if clean; never onto a feature or epic branch) and run the frozen install there (`npm ci`), so its workers can reuse it.
-2. Private notes: copy the project's private notes (SKILL.md, Preflight 5) into `~/.t3/private/<repo>/` there, replacing the old copy. A big task's handoff file (handoff.md) goes there too, and the launch pointer names that path. One-way: lessons go to the tracker, not into the copy.
-3. Env files: copy the repo's untracked `.env*` files into `<root>` at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`, piped through `tar` over SSH). Then each must be ignored there: `git -C <root> check-ignore -q <path>`, else append the path to `<root>/.git/info/exclude`, so no worker commits it. Never print them. Other data (dumps, fixtures) only when Mattia asks for that task.
+1. Sync your `<defaultBranch>`, as its own command: `bash ~/.claude/skills/tracer/scripts/land.sh sync <repo root> <ssh> <root> [<branch>]` (a `git push` to `local/<branch>` there, never forced; `<branch>` defaults to `TRACER_DEFAULT`, else `<defaultBranch>`). This is a sync, not a publish: no yes needed, unpushed commits included. Rejected: something moved `local/<branch>` there; stop and ask Mattia. When syncing the repo's real default branch and the sync brought a lockfile change, fast-forward that machine's main checkout (`merge --ff-only local/<defaultBranch>`, only if clean; never onto a feature or epic branch) and run the frozen install there (`npm ci` in the root or `frontend/`), so its workers can reuse it.
+2. Private notes and worktree defaults: place the machine-specific worker rules (privacy rules, toolchain prefix such as `mise exec --`, no-secrets rule) in `~/.t3/worktrees/<repo>/CLAUDE.md` on that machine, and any `mise` toolchain/venv pin in `~/.t3/worktrees/<repo>/mise.toml` (trusted with `mise trust`). Because they sit in the parent folder of every worktree for `<repo>`, Claude Code and `mise` load them automatically at turn 0 in every worktree, while the repo's tracked `CLAUDE.md` stays completely free of machine names, local setup and personal skills. Also copy the project's private notes (SKILL.md, Preflight 5) and any big task's handoff file (handoff.md) into `~/.t3/private/<repo>/` there, and name that path in the launch pointer. One-way: lessons go to the tracker, not into the copy.
+3. Env files: unless the project's private notes forbid sending `.env` files to that machine (client repos where secrets stay on Windows), copy the repo's untracked `.env*` files into `<root>` at the same relative paths (`git ls-files -oi --exclude-standard --directory | grep -E '(^|/)\.env[^/]*$'`, piped through `tar` over SSH). Then each must be ignored there: `git -C <root> check-ignore -q <path>`, else append the path to `<root>/.git/info/exclude`, so no worker commits it. Never print them. Other data (dumps, fixtures) only when Mattia asks for that task.
 4. Skills: `git -C <mstack checkout there> pull --ff-only` (machines.md gives the path), so `worker-rules.md`, the scripts and the guard match yours. A failed pull: tell Mattia.
 
 ## Still a worker
@@ -55,7 +55,7 @@ Code and files move over SSH (`<ssh>` and `<root>`: machines.md and the project'
 
 - A remote worker never pushes to origin. It commits on its branch and reports.
 - Fetch it into its own ref, never onto a local branch: `git fetch <ssh>:<root> +<branch>:refs/remotes/<label>/<branch>`. Check it matches the reported SHA, then review and merge from that ref (merge.md; `land.sh merge` with the remote arguments fetches, checks and deletes the ref for you).
-- At cleanup, remove its worktree and branch on that machine with the cleanup script over SSH (merge.md, Clean up). merge.md's "Mattia's OK" for branches on origin does not apply here.
+- At cleanup, remove its worktree and branch on that machine with the cleanup script over SSH (merge.md, Clean up). When a sub-tracer's epic or helper `local/<branch>` ref on that machine has been merged into `local/<defaultBranch>`, remove it with `bash ~/.claude/skills/tracer/scripts/land.sh drop-remote-ref <repo root> <ssh> <root> local/<branch> local/<defaultBranch>`. merge.md's "Mattia's OK" for branches on origin does not apply here.
 
 ## Previews
 
