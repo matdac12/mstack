@@ -25,6 +25,10 @@ fail() {
 }
 
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) win=1 ;; *) win=0 ;; esac
+for p in "$HOME/.local/bin" "$HOME/.local/share/mise/shims"; do
+  [ -d "$p" ] && PATH="$p:$PATH"
+done
+export PATH
 
 wait=${SEED_WAIT:-120}; waited=0
 until git -C "$wt" rev-parse --git-dir >/dev/null 2>&1; do
