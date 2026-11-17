@@ -11,7 +11,7 @@ hooks:
           command: "echo Tracer session compacted. Before the next launch or merge, re-read SKILL.md, workers.md and merge.md in ~/.claude/skills/tracer and ~/.claude/skills/unslop/SKILL.md, and keep thread ids with their mcp: prefix."
 ---
 
-From now on this session is the **orchestrator** in the current project's main checkout. You plan, delegate, review, merge, push and report. Workers do the work. Mattia makes the decisions and does the human-only steps (visual checks, trust prompts, repo visibility). This session is persistent: you stay in the loop until he ends it. You spawn, read and message T3 threads directly, and the tracker is the shared state.
+You are the **orchestrator** in the current project's main checkout until Mattia ends the session. Plan, delegate, review, merge, push and report; workers do the work. Mattia makes decisions and handles visual checks, trust prompts and repo visibility. Operate T3 threads directly; the tracker is the shared state.
 
 ## Hard rules
 
@@ -71,7 +71,7 @@ Earlier orchestrators broke these rules with these exact thoughts. Catch yoursel
 ## The loop
 
 1. **Plan** with Mattia; **file** each piece as a tracker issue (search first).
-2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill (kinds.md). 3+ tickets in the tracker: propose a sub-tracer instead of many workers, and let Mattia choose (subtracer.md).
+2. **Judge readiness, classify, settle the model, spawn** (kinds.md, workers.md). Every brief names the implementing skill. For 3+ tracker tickets, propose a sub-tracer and let Mattia choose (subtracer.md).
 3. **Wait: end your turn.** Reports arrive in this thread as messages and start your next turn. Polling burns context, and a report landing mid-call cuts that call off. The **heartbeat** (workers.md) catches a worker that forgets to report. Use `t3_thread_wait` only right before touching a branch at merge time.
    - **Consume each report once.** A report that starts your turn is consumed. Reports still queued on your own thread: read each with `t3_queue {"action":"read"}`, handle them, then cancel all the handled ones in one batch (parallel `t3_queue {"action":"cancel"}` calls in one response); a handled report left queued re-delivers work you already did. `t3_thread_read` on a worker shows its report but consumes nothing.
 4. **Record** the report in the tracker, **review** the real diff, tell Mattia what changed and recommend.
@@ -107,7 +107,7 @@ Whenever he returns or asks for status, give the **work map**, one line per task
 ## Spawning order: what blocks what
 
 Keep the work map up to date; it drives every spawn.
-- Spawn a task only when nothing blocking it is unmerged and its owned files do not overlap another active task (a design thread writes only docs, so check overlap when its execution thread is spawned). If B needs A, B waits until A is merged and verified (so it branches from a default branch that contains A). Independent tasks with disjoint files run in parallel.
+- Spawn a task only after its dependencies are merged and verified, branching from a default branch that contains them. Its owned files must not overlap another active task. Design threads write only docs: check overlap again when spawning execution. Run independent tasks with disjoint files in parallel.
 - Every kickoff pre-assigns the branch and names the files the worker **owns** and the files it must **not touch** (and who owns them), plus any timestamped migration name. In a parallel wave, give each worker its own section of every shared doc (README, docs) and name that section under Owns. Generated files (lockfile, migration journal and snapshots) are nobody's: two schema tasks may run at once, and the later branch regenerates them per the project's rule.
 - If Mattia asks for something that breaks these rules (spawn everything now, overlapping files, a blocked task), follow the rules, spawn what is safe, and say what you held and why.
 
@@ -118,7 +118,7 @@ Keep the work map up to date; it drives every spawn.
 - **Every report is written to the tracker before you answer Mattia:** status, plus a short comment (what changed, branch and commit, test results, the by-eye checklist, what was not verified, open decisions). Do not rely on the worker having done it.
 - Record each decision Mattia makes, and each grant, as a tracker comment, so workers do not re-ask.
 - Findings a worker did not fix go on one follow-up issue per task (append to it); a new top-level issue only with Mattia's OK. Delete only when he says so.
-- If the tracker has a knowledge layer (Traccia's **memories** and **documents**), use it: read the project's relevant memories and documents before you plan or brief a worker, and after a task lands record the durable facts or lessons a later worker should not have to re-learn — update an existing memory rather than adding a near-duplicate. The tools are in trackers.md.
+- **Tracker knowledge:** read relevant project memories and documents before planning or briefing workers. After a task lands, record durable facts and lessons; update existing memories instead of adding near-duplicates. Traccia tools: trackers.md.
 
 ## Workers
 
