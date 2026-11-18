@@ -4,7 +4,7 @@
 # Usage: spawn-worker.sh <name> <checkout> <model> <effort> <brief-file>
 #   name      unique among live terminals: 1-32 of a-z 0-9 - _
 #   checkout  the task's worktree (or the main checkout for read-only work)
-#   model     sonnet | opus | fable | grok | gpt | gpt:<model> (gpt alone: gpt-6.1-sol)
+#   model     sonnet | opus | fable | grok | gpt | gpt:<model> (gpt alone: gpt-6.2-sol)
 #   effort    claude: low | medium | high | xhigh | max; gpt, grok: low | medium | high | xhigh
 #   brief     the file holding the brief; the worker's first message only points to it
 # Works from Windows (Git Bash) and WSL. From WSL the worker runs in WSL too.
@@ -28,7 +28,7 @@ case "$model" in
   fable)  cmd="claude --model claude-fable-5-2 --effort $effort" ;;
   grok)   cmd="grok -m grok-4.7 --effort $effort" ;;
   gpt|gpt:*)
-    gm=${model#gpt}; gm=${gm#:}; gm=${gm:-gpt-6.1-sol}
+    gm=${model#gpt}; gm=${gm#:}; gm=${gm:-gpt-6.2-sol}
     case "$gm" in *[!a-z0-9.-]*) echo "bad gpt model: $gm" >&2; exit 2 ;; esac
     # danger-full-access: Codex's sandbox blocks the socket WSL needs to run hc.exe,
     # so a sandboxed worker could never report.
