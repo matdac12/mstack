@@ -47,7 +47,7 @@ A queued message that turns urgent: find it with `t3_queue {"action":"list","thr
 
 ## Heartbeat
 
-One scheduled check, owned by this thread, for a worker that forgets to report or stops moving. A worker **needs watching** when it has no recorded report and is not waiting on Mattia (a hand check, a decision).
+One scheduled check, owned by this thread, for a worker that forgets to report or stops moving. A worker **needs watching** until its report is recorded or its wait for Mattia is recorded in the work map.
 - **Exists only while a worker needs watching.** At such a launch, `list_scheduled_tasks` first: reuse the heartbeat bound to this thread (after a compaction you no longer know its id). None: one `schedule_task`, bound to this thread (the default), `schedule {"type":"interval","everyMs":<interval>}`, prompt "Tracer heartbeat: check unreported workers (workers.md, Heartbeat)". Choose the interval once, at creation: 600000 (10 minutes) when every watched task is small, 1800000 (30) when design, a big build or a sub-tracer is among them. It stays fixed until the heartbeat is deleted. Keep its id.
 - **Deleted** (`delete_scheduled_task`) as soon as no worker needs watching (check at each run and after each recorded report); the next launch that needs one creates it again.
 - Heartbeats bound to another orchestrator's thread are theirs: you reuse and delete only your own. One heartbeat for all your workers, and no `sleep` timers.
@@ -55,14 +55,14 @@ One scheduled check, owned by this thread, for a worker that forgets to report o
 At each launch, note on the work map when you expect the report (about N minutes). Agents are fast: a clear small task often takes minutes, not half an hour. After recording any report, run one `t3_thread_list` of your workers: one that went idle with no report gets the Idle-without-a-report step below now.
 
 Each run:
-1. **Clock first.** Compare the time now with the previous heartbeat run in this thread. A gap more than twice the interval means the host slept: tell Mattia how long it was out, and judge each worker by what it did since it woke, not by the gap.
+1. **Read the current work map.** Use its current workers, dependencies and finish line. Keep the scheduled prompt generic so it stays valid when the plan changes. A gap longer than twice the interval is a missed check. Verify the cause before naming it and assess workers using fresh activity before deciding they are stuck.
 2. For every worker that needs watching:
    - **Running, within its estimate:** nothing.
    - **Running, past twice its estimate:** read its last messages and activity first. Quiet since the last run: also check `git -C <worktree> log -1 --format=%cr` and `git -C <worktree> status --porcelain` (over SSH for a remote worker, remote.md). Moving by either: nothing. Not moving: tell Mattia what you see (away mode: SKILL.md, stuck).
    - **Idle, and its last message has the report fields:** that is its report; record it.
-   - **Idle without a report:** read its last messages. Ending on a question to Mattia: it waits on him; nothing. Otherwise take it in hand on this run: check `includeSubagents` (its review subagents may still be running); if nothing runs, ask it once for the report with `t3_thread_send`.
-   - **Waiting on a request** (`t3_pending_request {"action":"list"}`): tell Mattia. That list does not show permission prompts: a running worker with no new activity item for 10 minutes gets its `activity` view read; a prompt there is his to answer.
-3. Nothing to do: end the turn in one line, without messaging Mattia.
+   - **Idle without a report:** read its last messages. If it ends on a question only Mattia can answer, record the wait and park it in away mode. Otherwise check `includeSubagents` (its review subagents may still be running). If nothing runs, ask it once for the report with `t3_thread_send`.
+   - **Waiting on a request** (`t3_pending_request {"action":"list"}`): tell Mattia if he is at his desk. In away mode, park any request that needs him and continue independent work. That list omits permission prompts. For a running worker with no new activity item for 10 minutes, read its `activity` view to check for one.
+3. In away mode, surface recoveries, blockers and completed milestones only. For a routine check, update the work map as needed and end the turn without a user-facing update.
 
 **A worker that died or failed** gets a fresh thread in the same worktree, picked by cause: context limit → a smaller scope (split the task, or a handoff of what is done); tool or provider error → another model; unknown → the same brief once. At his desk, propose the relaunch to Mattia; in away mode, do it. Two failed relaunches: stop, tell him, and replan the task.
 

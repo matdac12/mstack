@@ -79,4 +79,4 @@ Reply with what waits on him and a few lines on what you changed in the tracker 
 Resume <repo>. Read ~/.t3/handoffs/<repo name>/close-of-day.md first, then check it against git before doing anything.
 ```
 
-With the `shutdown` argument, and only then: once the reply is written, run `shutdown /s /t 120` and tell him `shutdown /a` cancels it.
+When Mattia explicitly asks for shutdown, including via the `shutdown` argument, send the closeout with the paste-in prompt above before scheduling it. Include `shutdown /a` as the cancellation command in that same reply. Then run `shutdown /s /t 120` and report a scheduling failure if the command fails.
