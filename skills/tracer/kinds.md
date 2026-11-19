@@ -41,6 +41,17 @@ Say the kind to Mattia in a word. Skills named below are assumed installed for e
 | Review | the worker | findings, no edits |
 | Investigate | the worker | findings report |
 | Guide (interview) | Mattia, in the thread | decisions, committed |
+| Guide (hand check) | Mattia, in the thread | results by check and preview version |
+
+### Hand-check guide
+
+Launch a separate read-only Guide thread for manual or visual checks. Brief it with the exact preview URL, verified serving version, issues and acceptance criteria, and any prior check results. Include `Mattia works with you in this thread.` and the standard report line (workers.md). Give Mattia the guide's thread link. During away mode, prepare the brief and leave the hand check parked until he returns.
+
+The guide owns the walkthrough. It verifies the serving version using the project's normal procedure, gives Mattia the exact page link, one action and the expected result, then waits for his answer. It records each check's behavior, result and serving version. If the preview changes or the serving version is uncertain, pause and confirm the version before resuming with the affected checks. Leave an in-flight check unverified if its version cannot be established. At the end, send the orchestrator one report with passed, failed and unverified checks and where to resume. The orchestrator keeps the results on the issue.
+
+For a preview update, the orchestrator gives the guide the diff or affected behavior between the previously checked version and the new one. The guide queues new checks and rechecks for affected behavior, including shared paths like login or navigation when the change reaches them. Carry forward unaffected passes with their original version if their relevant environment and data still match. If impact is unclear, recheck that behavior.
+
+### Design and implementation
 
 **Design.** The thread is his: he talks to the agent in the sidebar; you do not steer it and wait for its report. Ask him which model and which skill family (default superpowers):
 - **superpowers:** `superpowers:brainstorming` through the spec, then `superpowers:writing-plans`.

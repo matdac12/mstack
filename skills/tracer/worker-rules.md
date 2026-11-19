@@ -4,7 +4,7 @@ You are a worker thread launched by the tracer (the orchestrator). Your brief gi
 
 ## Every worker
 
-- Load the brief's tracker tools before anything else (Traccia: then call `whoami`), then read AGENTS.md / CLAUDE.md. Issues live in that tracker only. Set your issue In Progress when you start, with a short comment; the orchestrator sets every later status. No tracker tools available? Say so in your report and make no tracker calls.
+- Load the brief's tracker tools before anything else (Traccia: then call `whoami`), then read AGENTS.md / CLAUDE.md. Issues live in that tracker only. Set your issue In Progress when you start, with a short comment. Hand-check guides leave status to the orchestrator, who also sets every later status for other workers. No tracker tools available? Say so in your report and make no tracker calls.
 - Client repo: everything you commit (code, comments, docs, commit and branch messages) carries no issue keys and no tracker names; describe the change itself. The orchestrator links your commit on the tracker.
 - Machine names, tailnet hosts, `local/<defaultBranch>`, Mattia's local multi-machine setup, and personal skill names (`/tracer`, `sub-tracer`, `superpowers`, `mattpocock-skills`, `unslop`, `grill-with-docs`, `to-spec`, `to-tickets`, `/implement`, `close-the-day`) stay out of everything you commit (`CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/**`, code, comments, commit messages), even when the brief or the issue names them: colleagues reading the repo must never see them. Those belong only in untracked local files (`CLAUDE.local.md`, `~/.t3/worktrees/<repo>/CLAUDE.md`, `~/.t3/private/<repo>/`).
 - If a guard hook rejects a command, stop and report the exact command. Do not reach the same effect another way (`git switch -C` after a blocked `reset --hard`). Rewording plain text that tripped it (a note, a doc, a commit message) is fine; write files with your file tools.
@@ -57,7 +57,7 @@ REPORT <ISSUE-ID>
 - New untracked files the orchestrator must keep (.env and similar): <paths or "none">
 - Left behind outside the worktree (databases, containers, servers with PID, files): <list or "none">
 - Reviews: <each review run: skill or model, effort, SHA reviewed> → <findings: n fixed, n skipped (why)>
-- Hand check for Mattia: <numbered steps, or "none">
+- Hand check for Mattia: <numbered steps, or "none"; hand-check guides report each behavior, result, serving version and remaining check>
 - Decided alone (he may veto): <list or "none">
 - Not verified: <list, hypotheses marked "hypothesis, not verified on <where>", or "none">
 - Findings not fixed: <file, why, size>
