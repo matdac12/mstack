@@ -13,7 +13,7 @@
 #   land.sh drop-remote-ref <repo-root> <ssh> <remote-root> <branch> <merged-into>
 #     Deletes refs/heads/<branch> (such as local/<epic>) on <ssh>:<remote-root>
 #     once it is merged into <merged-into> there.
-# TRACER_DEFAULT=<branch> overrides the default branch (a sub-tracer's epic).
+# TRACER_DEFAULT=<branch> selects a preview, integration or epic target.
 # Verifying the merged result stays yours. Exit 0 done, 1 stopped, 2 usage.
 set -u
 
@@ -43,16 +43,24 @@ merge)
   want=$(git -C "$repo" rev-parse -q --verify "$sha^{commit}") || stop "unknown commit $sha"
   have=$(git -C "$repo" rev-parse -q --verify "$ref^{commit}") || stop "no branch $ref"
   [ "$have" = "$want" ] || stop "$ref is at ${have:0:12}, you reviewed ${want:0:12}: review the new commits first"
-  bash "$(dirname "$0")/leak-check.sh" "$repo" --message-file "$msg" "$default..$ref" \
+  before=$(git -C "$repo" rev-parse --verify HEAD) || stop "cannot resolve the target commit"
+  bash "$(dirname "$0")/leak-check.sh" "$repo" --message-file "$msg" "$before..$want" \
     || stop "leak check failed on $branch; rewrite the branch before merging"
-  before=$(git -C "$repo" rev-parse HEAD)
-  if ! git -C "$repo" merge -q --no-ff -F "$msg" "$ref"; then
+  [ "$(git -C "$repo" symbolic-ref --short HEAD)" = "$default" ] &&
+    [ "$(git -C "$repo" rev-parse HEAD)" = "$before" ] || stop "target moved during the leak check; recheck before merging"
+  if ! git -C "$repo" merge -q --no-ff -F "$msg" "$want"; then
     git -C "$repo" merge --abort
     stop "conflicts merging $branch; main is back at ${before:0:12}. Resolve them in the worker's worktree (merge.md, step 3)"
   fi
   echo "merged $branch (${want:0:12}) into $default: ${before:0:12} -> $(git -C "$repo" rev-parse --short=12 HEAD)"
   echo "now verify; red means: git revert -m 1 --no-edit HEAD"
-  [ "$ref" = "$branch" ] || { git -C "$repo" update-ref -d "$ref" && echo "deleted fetched ref $ref"; }
+  if [ "$ref" != "$branch" ]; then
+    if git -C "$repo" update-ref -d "$ref" "$want"; then
+      echo "deleted fetched ref $ref"
+    else
+      echo "warning: merge succeeded; retained fetched ref $ref" >&2
+    fi
+  fi
   ;;
 sync)
   [ $# -eq 4 ] || [ $# -eq 5 ] || usage

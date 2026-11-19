@@ -99,7 +99,7 @@ n=$(wc -l < "$pat")
 [ "$n" -gt 0 ] || echo "warning: no patterns found (no .env values, machines.md or leak-patterns.txt)"
 
 hits=$(
-  { git -C "$repo" log -p --no-color --no-ext-diff --format='commit %H' "$@" || exit 2
+  { git -C "$repo" log -p --diff-merges=first-parent --no-color --no-ext-diff --format='commit %H' "$@" || exit 2
     git -C "$repo" log --format='commit %H%nmessage%n%B' "$@" | sed '/^commit /!{/^message$/!s/^/+/}' || exit 2
     if [ -n "$message_file" ]; then
       printf 'commit pending\nmessage\n'

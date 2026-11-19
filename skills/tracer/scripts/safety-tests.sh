@@ -29,6 +29,28 @@ git -C "$repo" config --unset tracer.projectKeys
 check reject bash "$scripts/leak-check.sh" "$repo" main..feature
 git -C "$repo" config tracer.projectKeys TEST
 check reject bash "$scripts/leak-check.sh" "$repo" missing..main
+git -C "$repo" switch -q -c preview
+git -C "$repo" branch merge-input
+git -C "$repo" commit -q --allow-empty -m 'preview base'
+base=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" switch -q merge-input
+git -C "$repo" commit -q --allow-empty -m 'clean input'
+git -C "$repo" branch clean-input
+git -C "$repo" merge -q --no-ff --no-commit preview
+printf 'TEST-123\n' > "$repo/merge-only.txt"
+git -C "$repo" add merge-only.txt
+git -C "$repo" commit -q -m 'merge with an extra edit'
+sha=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" switch -q preview
+check reject bash "$scripts/leak-check.sh" "$repo" preview..merge-input
+check grep -q '(issue key TEST-NNN)' "$tmp/output"
+check reject env TRACER_DEFAULT=preview bash "$scripts/land.sh" merge "$repo" merge-input "$sha" "$tmp/message"
+check test "$(git -C "$repo" rev-parse HEAD)" = "$base"
+clean_sha=$(git -C "$repo" rev-parse clean-input)
+check bash "$scripts/leak-check.sh" "$repo" preview..clean-input
+check env TRACER_DEFAULT=preview bash "$scripts/land.sh" merge "$repo" clean-input "$clean_sha" "$tmp/message"
+check test "$(git -C "$repo" rev-parse HEAD^2)" = "$clean_sha"
+git -C "$repo" switch -q main
 cat > "$tmp/bin/ssh" <<'SH'
 #!/usr/bin/env bash
 shift

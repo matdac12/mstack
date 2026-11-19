@@ -68,7 +68,20 @@ Each run:
 
 ## Worktree seeding (first thread of a task)
 
-Gitignored files do not come with a worktree. Right after the launch that creates it, run `bash ~/.claude/skills/tracer/scripts/seed-worktree.sh <worktree path>` (path from `t3_worktree_list`; in a parallel wave, seed all new worktrees concurrently with `&`, save every PID, then `wait "$pid"` for each and record each exit status; a bare `wait` hides failures). It waits for the worktree, then brings the MCP approval (without it the worker stalls on "New MCP servers found"), the untracked `.env*` and `mise.local.toml` files (made ignored there, never printed) and the installed dependencies at the root and in 1-level subfolders (Dependencies, below), and writes what it did to the worktree's git dir as `tracer-seed` only when it is done: an absent note means the outcome is not yet known (do not install on top; if it stays absent, report blocked so the orchestrator checks the seed process and its exit status), and a note starting with `seed failed` is a failure you carry to Mattia. A worktree whose path casing differs from the repo's stalls on "Do you trust the files in this folder?". A stalled worker cannot report that: shortly after launch, `t3_thread_read` it (`activity` view) and `t3_pending_request {"action":"list"}`; if stuck, tell Mattia (he accepts trust prompts). The worker's first act: `git rev-parse --path-format=absolute --git-common-dir` must print `<repo root>/.git`, else report blocked "wrong repo". If a worker says its tracker MCP is missing in the worktree, tell Mattia; it must not fall back to another tracker.
+Treat launch and seed as one operation for every fresh code worktree, including small fixes.
+
+1. After launch, take the actual worktree path from `t3_worktree_list` on the worker's environment. Keep its casing and spaces. In Git Bash use forward slashes for a Windows path.
+2. Run this as one command on the worktree's machine. For a linked machine use the SSH form in remote.md.
+
+   ```bash
+   bash ~/.claude/skills/tracer/scripts/seed-worktree.sh "$path" &&
+     git_dir=$(git -C "$path" rev-parse --path-format=absolute --git-dir) &&
+     grep -q '^seed done$' "$git_dir/tracer-seed"
+   ```
+
+3. Record the exit status for each path. In a parallel wave, run the operation for each path concurrently, save each PID, and use `if wait "$pid"; then ...; else rc=$?; ...; fi` for each. Read the error output on failure. Keep these commands out of output-filter pipelines.
+
+The script copies the MCP approval, ignored local configuration and reusable dependencies at the root and one level down. The worker reads `tracer-seed` before installing. An absent note means the outcome is unknown. A note starting with `seed failed` means stop and report. Shortly after launch, use `t3_thread_read` (activity view) and `t3_pending_request {"action":"list"}` to catch trust or MCP prompts and tell Mattia if he needs to act. The worker checks that its Git common directory is the intended repo's `.git`. Report missing tracker tools to Mattia and keep to the chosen tracker.
 
 ## Dependencies (first thread of a task)
 
