@@ -1,6 +1,6 @@
 ---
 name: close-the-day
-description: End-of-day wrap-up for the current project. Tidies the whole tracker project, brings CLAUDE.md, AGENTS.md, docs and memories up to date, cleans up, and writes the note and paste-in prompt tomorrow starts from. Add "shutdown" to turn the PC off at the end.
+description: End-of-day wrap-up or docs-and-memory maintenance for the current project. Use for a full closeout with tracker, cleanup and a restart note, or when Mattia explicitly asks to update only documentation and memories. Add "shutdown" for a full closeout that turns the PC off.
 disable-model-invocation: true
 user-invocable: true
 argument-hint: "[shutdown]"
@@ -8,9 +8,12 @@ argument-hint: "[shutdown]"
 
 # Close the day
 
-Mattia is stopping for the day. Leave the project so tomorrow's session starts from a written note, not from memory. Write everything to him following `~/.claude/skills/unslop/SKILL.md` (read it first).
+Write to Mattia following `~/.claude/skills/unslop/SKILL.md` (read it first). Choose the path from his request, whether or not Tracer is active:
 
-Invoking this skill is Mattia asking you to tidy the tracker and fix the docs yourself, also inside a tracer session; there, settle and clean-up still follow tracer's merge.md. Never push or deploy here, even when work is unpushed: list it instead.
+- **Full closeout** is the default for `/close-the-day` or a request to close the day. Follow all six steps. Tidy the tracker and fix the docs yourself. In Tracer, settle and clean up under tracer's merge.md. An explicit shutdown request uses this path.
+- **Docs and memories only** when Mattia narrows the request to that. Read the repo status, relevant diff and recent commits for context, then do step 3. Report what changed and what you could not verify. Leave tracker issues, handoff notes, threads, processes, worktrees and installed skills alone. Update project memories in their existing stores, including Traccia when used. Commit only if asked.
+
+Never push or deploy during either path. In a full closeout, list unpushed work in the note.
 
 ## 1. Read the state
 
@@ -31,11 +34,11 @@ Done when every open issue has a status git agrees with, a current description, 
 
 ## 3. Update the docs and memories
 
-`CLAUDE.md` and `AGENTS.md`, whichever exist, are what every agent reads first, so go over every line, not only what today touched. Check each claim against the code (commands, paths, behaviour, conventions): fix it or delete it. Then cut what an agent does not need before it starts work: history, what the code or README already says, detail that belongs in `docs/`. What stays is rules and pointers. Done when every line is true today and earns its place.
+`CLAUDE.md` and `AGENTS.md`, whichever exist, are what every agent reads first. Scan both for stale commands, paths, behaviours, conventions and pointers. Edit claims the work changed or that you can verify are wrong. Keep durable rules and pointers in startup docs. In a full closeout, put temporary state such as unpushed commits and tomorrow's next task in the handoff note.
 
-The README and the `docs/` folder: check each claim that today's work touched against the code and fix what is wrong or missing. Private facts (scale, client details, tracker notes, machine names, local multi-machine setup, personal skills like `/tracer`, `superpowers`, `mattpocock-skills`, `unslop`, `close-the-day`) stay in the untracked local notes (`CLAUDE.local.md`, parent-folder `CLAUDE.md`, `~/.t3/worktrees/<repo>/CLAUDE.md`), never in a tracked file (`CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/**`). A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). Commit the doc changes as one commit; nothing changed: say so.
+The README and the `docs/` folder: check claims the work touched against the code and fix what is wrong or missing. Private facts (scale, client details, tracker notes, machine names, local multi-machine setup, personal skills like `/tracer`, `superpowers`, `mattpocock-skills`, `unslop`, `close-the-day`) stay in the untracked local notes (`CLAUDE.local.md`, parent-folder `CLAUDE.md`, `~/.t3/worktrees/<repo>/CLAUDE.md`), never in a tracked file (`CLAUDE.md`, `AGENTS.md`, `README.md`, `docs/**`). A client repo stays free of issue keys and tracker names (tracer SKILL.md, Hard rules). In a full closeout, commit only the doc changes you made as one commit. If nothing needed changing, say so.
 
-**Memories** are what agents rely on most, so a stale one does the most harm. Read every memory for this project: your own local memory (the agent memory folder and its index, such as Claude's `MEMORY.md`) and the tracker's (Traccia memories). Check each against the code and the tracker: fix what went stale, delete what is wrong, merge near-duplicates, keep the index in step. Add the lessons from today a later session should not have to re-learn, updating an existing memory rather than adding a near-duplicate. Done when every memory you kept is true today.
+**Memories:** scan the project's local memory and index (such as Claude's `MEMORY.md`) and its tracker memories when available. Verify entries relevant to the work and anything that looks stale. Correct verified errors, merge duplicates, and keep the index in step. Save durable lessons a later session would otherwise have to relearn by updating an existing entry when it covers the same subject.
 
 ## 4. Clean up
 
@@ -64,7 +67,7 @@ Overwrite `~/.t3/handoffs/<repo name>/close-of-day.md` (create the folder). It s
 ## Next
 1. <first thing tomorrow>
 ## Left running on purpose
-<or "nothing">
+- <task, worker thread link, and what to reconcile on return, or "nothing">
 ## This session
 Orchestrator thread <id>: finished with this note. Its threads are settled, or listed above; a new session owns everything from here.
 <in a tracer session, add:> Tracer session. If the tracer skill is not loaded when you read this, launch no thread and merge nothing: ask Mattia to send `/tracer` first.
@@ -72,11 +75,12 @@ Orchestrator thread <id>: finished with this note. Its threads are settled, or l
 
 ## 6. Hand back
 
-Reply with what waits on him and a few lines on what you changed in the tracker and docs, then a paste-in prompt for tomorrow in a code block. In a tracer session it starts with `/tracer` on its own line, so tomorrow's session loads the skill instead of orchestrating from memory:
+Reply with what waits on him and a few lines on what you changed in the tracker and docs, then a paste-in prompt for tomorrow in a code block. Copy the first concrete action from the note. Include any decision Mattia kept for himself that gates it. In a Tracer session start the prompt with `/tracer` on its own line. For a standalone handoff, start with `Resume`:
 
 ```
 /tracer
 Resume <repo>. Read ~/.t3/handoffs/<repo name>/close-of-day.md first, then check it against git before doing anything.
+Start with <first concrete action>. <Ask me before the action that requires my decision, if any.>
 ```
 
 When Mattia explicitly asks for shutdown, including via the `shutdown` argument, send the closeout with the paste-in prompt above before scheduling it. Include `shutdown /a` as the cancellation command in that same reply. Then run `shutdown /s /t 120` and report a scheduling failure if the command fails.
